@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kalkulator czasu triathlon</title>
+  <style>
+    body { font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 16px; background:#f8f9fb;}
+    .wrap { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 22px; }
+    .card { background:white; border-radius:12px; padding:16px; margin:12px 0; box-shadow:0 2px 6px rgba(0,0,0,0.08);}
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+    label { font-weight:600; font-size:14px; }
+    input, select { width:100%; padding:10px; font-size:16px; border-radius:8px; border:1px solid #ccc; }
+    .mode { display:flex; gap:12px; margin:8px 0; }
+    .mode label { font-weight:500; }
+    .out { font-family:monospace; font-size:18px; font-weight:bold; }
+    .outbig { font-family:monospace; font-size:22px; font-weight:bold; }
+    .error { color:#c40000; font-weight:bold; }
+    .ok { color:#0a7d28; font-weight:bold; }
+    @media(max-width:800px){
+      .grid, .grid3 { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Kalkulator czasu triathlon</h1>
+
+  <div class="card">
+    <label>Dystans</label>
+    <select id="race">
+      <option value="Sprint">Sprint</option>
+      <option value="Olimpijski">Olimpijski</option>
+      <option value="1/4 IM">1/4 IM</option>
+      <option value="1/2 IM" selected>1/2 IM</option>
+      <option value="Pełny (IM)">Pełny (IM)</option>
+      <option value="Własny">Własny</option>
+    </select>
+
+    <div class="grid3" style="margin-top:12px">
+      <div>
+        <label>Pływanie (m)</label>
+        <input id="swim_m">
+      </div>
+      <div>
+        <label>Rower (km)</label>
+        <input id="bike_km">
+      </div>
+      <div>
+        <label>Bieg (km)</label>
+        <input id="run_km">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Pływanie</h3>
+    <div class="mode">
+      <label><input type="radio" name="swim_mode" value="pace" checked> Tempo</label>
+      <label><input type="radio" name="swim_mode" value="time"> Czas</label>
+    </div>
+    <div class="grid">
+      <div>
+        <label>Tempo (mm:ss /100m)</label>
+        <input id="swim_pace">
+      </div>
+      <div>
+        <label>Czas</label>
+        <input id="swim_time">
+      </div>
+    </div>
+    <div class="out" id="out_swim">--:--:--</div>
+  </div>
+
+  <div class="card">
+    <h3>Rower</h3>
+    <div class="mode">
+      <label><input type="radio" name="bike_mode" value="pace" checked> Prędkość</label>
+      <label><input type="radio" name="bike_mode" value="time"> Czas</label>
+    </div>
+    <div class="grid">
+      <div>
+        <label>Prędkość (km/h)</label>
+        <input id="bike_speed">
+      </div>
+      <div>
+        <label>Czas</label>
+        <input id="bike_time">
+      </div>
+    </div>
+    <div class="out" id="out_bike">--:--:--</div>
+  </div>
+
+  <div class="card">
+    <h3>Bieg</h3>
+    <div class="mode">
+      <label><input type="radio" name="run_mode" value="pace" checked> Tempo</label>
+      <label><input type="radio" name="run_mode" value="time"> Czas</label>
+    </div>
+    <div class="grid">
+      <div>
+        <label>Tempo (mm:ss /km)</label>
+        <input id="run_pace">
+      </div>
+      <div>
+        <label>Czas</label>
+        <input id="run_time">
+      </div>
+    </div>
+    <div class="out" id="out_run">--:--:--</div>
+  </div>
+
+  <div class="card">
+    <h3>Zmiany</h3>
+    <div class="grid">
+      <div>
+        <label>T1</label>
+        <input id="t1">
+      </div>
+      <div>
+        <label>T2</label>
+        <input id="t2">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Czas łączny</h3>
+    <div class="outbig" id="out_total">--:--:--</div>
+    <div id="status" class="error">Uzupełnij dane</div>
+  </div>
+
+</div>
+
+<script>
+const PRESETS = {
+  "Sprint": { swim:750, bike:20, run:5 },
+  "Olimpijski": { swim:1500, bike:40, run:10 },
+  "1/4 IM": { swim:950, bike:45, run:10.55 },
+  "1/2 IM": { swim:1900, bike:90, run:21.1 },
+  "Pełny (IM)": { swim:3800, bike:180, run:42.2 }
+};
+
+function parseTime(t){
+  if(!t) return null;
+  const p = t.split(":").map(Number);
+  if(p.length===2) return p[0]*60+p[1];
+  if(p.length===3) return p[0]*3600+p[1]*60+p[2];
+  return null;
+}
+
+function format(s){
+  if(s==null) return "--:--:--";
+  s=Math.round(s);
+  const h=Math.floor(s/3600);
+  const m=Math.floor((s%3600)/60);
+  const sec=s%60;
+  return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0");
+}
+
+function calc(){
+  try{
+    const swim_m=parseFloat(swim_m.value);
+    const bike_km=parseFloat(bike_km.value);
+    const run_km=parseFloat(run_km.value);
+
+    let swim=null,bike=null,run=null;
+
+    if(document.querySelector('input[name="swim_mode"]:checked').value==="time"){
+      swim=parseTime(swim_time.value);
+    }else{
+      const pace=parseTime(swim_pace.value);
+      if(pace) swim=swim_m/100*pace;
+    }
+
+    if(document.querySelector('input[name="bike_mode"]:checked').value==="time"){
+      bike=parseTime(bike_time.value);
+    }else{
+      const speed=parseFloat(bike_speed.value);
+      if(speed) bike=bike_km/speed*3600;
+    }
+
+    if(document.querySelector('input[name="run_mode"]:checked').value==="time"){
+      run=parseTime(run_time.value);
+    }else{
+      const pace=parseTime(run_pace.value);
+      if(pace) run=run_km*pace;
+    }
+
+    out_swim.textContent=format(swim);
+    out_bike.textContent=format(bike);
+    out_run.textContent=format(run);
+
+    const t1v=parseTime(t1.value);
+    const t2v=parseTime(t2.value);
+
+    if(swim&&bike&&run&&t1v&&t2v){
+      out_total.textContent=format(swim+bike+run+t1v+t2v);
+      status.textContent="OK";
+      status.className="ok";
+    }else{
+      out_total.textContent="--:--:--";
+      status.textContent="Uzupełnij wszystkie dane";
+      status.className="error";
+    }
+
+  }catch(e){
+    status.textContent="Błąd danych";
+    status.className="error";
+  }
+}
+
+race.addEventListener("change",()=>{
+  if(PRESETS[race.value]){
+    swim_m.value=PRESETS[race.value].swim;
+    bike_km.value=PRESETS[race.value].bike;
+    run_km.value=PRESETS[race.value].run;
+  }
+  calc();
+});
+
+document.querySelectorAll("input,select").forEach(e=>{
+  e.addEventListener("input",calc);
+  e.addEventListener("change",calc);
+});
+
+race.dispatchEvent(new Event("change"));
+</script>
+
+</body>
+</html>
