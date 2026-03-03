@@ -38,6 +38,13 @@
     }
     .seg button[aria-pressed="true"]{ border-color:#111; background:#111; color:#fff; }
 
+    /* validation highlight */
+    .need {
+      border-color:#c40000 !important;
+      box-shadow:0 0 0 3px rgba(196,0,0,0.14);
+      background: #fff7f7;
+    }
+
     @media(max-width:800px){ .grid, .grid3 { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -277,7 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Swim
   const swim_pace = el("swim_pace"), swim_time = el("swim_time"), out_swim = el("out_swim");
 
-  // Bike
+  // Bike (common)
   const bike_speed = el("bike_speed"), bike_time = el("bike_time"), bike_time_manual = el("bike_time_manual"), bike_speed_calc = el("bike_speed_calc"),
         out_bike = el("out_bike"), bike_block_speed = el("bike_block_speed"), bike_block_time = el("bike_block_time"), bike_block_ftp = el("bike_block_ftp");
 
@@ -306,7 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Seg buttons
   const swim_mode_pace = el("swim_mode_pace"), swim_mode_time = el("swim_mode_time");
-  const bike_mode_speed = el("bike_mode_speed"), bike_mode_time = el("bike_mode_time"), bike_mode_ftp = el("bike_mode_ftp");
+  const bike_mode_speed = el("bike_mode_speed"), bike_mode_time  = el("bike_mode_time"), bike_mode_ftp = el("bike_mode_ftp");
   const run_mode_pace = el("run_mode_pace"), run_mode_time = el("run_mode_time");
 
   let swimMode = "pace";
@@ -391,6 +398,16 @@ document.addEventListener("DOMContentLoaded", () => {
     return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
   }
 
+  /* ---------- validation UI helpers ---------- */
+  function clearNeed(){
+    document.querySelectorAll(".need").forEach(x=>x.classList.remove("need"));
+  }
+  function markNeed(elem, isBad){
+    if(!elem) return;
+    if(isBad) elem.classList.add("need");
+    else elem.classList.remove("need");
+  }
+
   function applyRacePreset(){
     const val = race.value;
     const isCustom = (val === "Własny");
@@ -434,11 +451,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function calc(){
+    // reset highlights each time, then add back
+    clearNeed();
+
     const missing = [];
 
     const sM = parsePositive(swim_m.value);
     const bK = parsePositive(bike_km.value);
     const rK = parsePositive(run_km.value);
+
+    markNeed(swim_m, sM==null);
+    markNeed(bike_km, bK==null);
+    markNeed(run_km,  rK==null);
 
     if(sM==null) missing.push("dystans pływania");
     if(bK==null) missing.push("dystans roweru");
@@ -450,9 +474,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if(sM!=null){
       if(swimMode==="time"){
         swimSec = parseTimeToSeconds(swim_time.value);
+        markNeed(swim_time, swimSec==null);
+        // w trybie time nie wymagamy tempa
+        markNeed(swim_pace, false);
         if(swimSec==null) missing.push("pływanie: czas");
       } else {
         const pace100 = parseTimeToSeconds(swim_pace.value);
+        markNeed(swim_pace, pace100==null);
+        markNeed(swim_time, false);
         if(pace100==null) missing.push("pływanie: tempo");
         else swimSec = (Math.round(sM)/100.0)*pace100;
       }
@@ -462,6 +491,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if(bK!=null){
       if(bikeMode==="speed"){
         const spd = parsePositive(bike_speed.value);
+        markNeed(bike_speed, spd==null);
+        if(bike_time_manual) markNeed(bike_time_manual, false);
+        // FTP fields not required in this mode
+        [ftp, IF, mass, bike_mass, grade, cda, crr, rho, wind, drivetrain].forEach(x=>markNeed(x,false));
+
         if(spd==null) missing.push("rower: prędkość");
         else {
           bikeSec = (bK/spd)*3600.0;
@@ -469,12 +503,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } else if(bikeMode==="time"){
         bikeSec = parseTimeToSeconds(bike_time_manual.value);
+        markNeed(bike_time_manual, bikeSec==null);
+        markNeed(bike_speed, false);
+        // FTP fields not required in this mode
+        [ftp, IF, mass, bike_mass, grade, cda, crr, rho, wind, drivetrain].forEach(x=>markNeed(x,false));
+
         if(bikeSec==null) missing.push("rower: czas");
         else {
           const spd = (bK/(bikeSec/3600.0));
           bike_speed_calc.value = (Math.round(spd*10)/10).toString();
         }
-      } else { // FTP/IF (liczy niezależnie)
+      } else { // FTP/IF
         applyFtpPresets();
 
         const ftpV = parsePositive(ftp.value);
@@ -488,7 +527,22 @@ document.addEventListener("DOMContentLoaded", () => {
         const windV = parseNumber(wind.value);
         const etaV = parsePositive(drivetrain.value);
 
-        // braki tylko do samego roweru (żeby wyświetlał czas roweru nawet bez biegu/T1/T2)
+        // highlight missing FTP fields (independent of total)
+        markNeed(ftp, ftpV==null);
+        markNeed(IF,  ifV==null);
+        markNeed(mass, mV==null);
+        markNeed(bike_mass, bmV==null);
+        markNeed(grade, gradeV==null);
+        markNeed(cda, cdaV==null);
+        markNeed(crr, crrV==null);
+        markNeed(rho, rhoV==null);
+        markNeed(wind, windV==null);
+        markNeed(drivetrain, etaV==null);
+
+        // not required in this mode
+        markNeed(bike_speed, false);
+        if(bike_time_manual) markNeed(bike_time_manual, false);
+
         const bikeReady =
           ftpV!=null && ifV!=null && mV!=null && bmV!=null &&
           gradeV!=null && cdaV!=null && crrV!=null && rhoV!=null &&
@@ -509,7 +563,6 @@ document.addEventListener("DOMContentLoaded", () => {
           bikeSec = (bK/spd_kmh)*3600.0;
           bike_time.value = fmt(bikeSec);
         } else {
-          // ale do TOTALa nadal pokażemy co brakuje
           if(ftpV==null) missing.push("FTP");
           if(ifV==null) missing.push("IF");
           if(mV==null) missing.push("masa");
@@ -528,9 +581,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if(rK!=null){
       if(runMode==="time"){
         runSec = parseTimeToSeconds(run_time.value);
+        markNeed(run_time, runSec==null);
+        markNeed(run_pace, false);
         if(runSec==null) missing.push("bieg: czas");
       } else {
         const pace = parseTimeToSeconds(run_pace.value);
+        markNeed(run_pace, pace==null);
+        markNeed(run_time, false);
         if(pace==null) missing.push("bieg: tempo");
         else runSec = rK*pace;
       }
@@ -543,6 +600,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // transitions for TOTAL
     const t1s = parseTimeToSeconds(t1.value);
     const t2s = parseTimeToSeconds(t2.value);
+    markNeed(t1, t1s==null);
+    markNeed(t2, t2s==null);
     if(t1s==null) missing.push("T1");
     if(t2s==null) missing.push("T2");
 
