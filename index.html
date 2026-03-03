@@ -8,18 +8,40 @@
     body { font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 16px; background:#f8f9fb;}
     .wrap { max-width: 900px; margin: 0 auto; }
     h1 { font-size: 22px; margin: 0 0 10px; }
+    h3 { margin: 0 0 8px; }
     .card { background:white; border-radius:12px; padding:16px; margin:12px 0; box-shadow:0 2px 6px rgba(0,0,0,0.08);}
     .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
     label { font-weight:600; font-size:14px; display:block; margin-bottom:6px; }
     input, select { width:100%; padding:10px; font-size:16px; border-radius:8px; border:1px solid #ccc; }
-    .mode { display:flex; gap:12px; margin:8px 0; flex-wrap: wrap; }
-    .mode label { font-weight:500; margin: 0; display:flex; align-items:center; gap:8px; }
+    .muted { color:#666; font-size:12px; }
     .out { font-family: ui-monospace, Menlo, Consolas, monospace; font-size:18px; font-weight:900; margin-top:8px; }
     .outbig { font-family: ui-monospace, Menlo, Consolas, monospace; font-size:22px; font-weight:900; }
     .error { color:#c40000; font-weight:800; }
     .ok { color:#0a7d28; font-weight:800; }
-    .muted { color:#666; font-size:12px; }
+
+    /* iOS-friendly segmented toggles (zamiast radio obok tekstu) */
+    .seg { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 6px; }
+    .seg button {
+      appearance: none;
+      -webkit-appearance: none;
+      border: 1px solid #d0d0d0;
+      background: #fff;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .seg button[aria-pressed="true"]{
+      border-color:#111;
+      background:#111;
+      color:#fff;
+    }
+
+    .hr { height:1px; background:#eee; margin:12px 0; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#f0f2f6; font-size:12px; font-weight:700; color:#333; }
+
     @media(max-width:800px){ .grid, .grid3 { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -48,10 +70,10 @@
   </div>
 
   <div class="card">
-    <h3 style="margin:0 0 8px;">Pływanie</h3>
-    <div class="mode">
-      <label><input type="radio" name="swim_mode" value="pace" checked> Tempo</label>
-      <label><input type="radio" name="swim_mode" value="time"> Czas</label>
+    <h3>Pływanie</h3>
+    <div class="seg" role="group" aria-label="Pływanie tryb">
+      <button id="swim_mode_pace" aria-pressed="true" type="button">Tempo</button>
+      <button id="swim_mode_time" aria-pressed="false" type="button">Czas</button>
     </div>
     <div class="grid">
       <div><label for="swim_pace">Tempo (mm:ss /100m)</label><input id="swim_pace" placeholder="np. 2:10"></div>
@@ -61,23 +83,61 @@
   </div>
 
   <div class="card">
-    <h3 style="margin:0 0 8px;">Rower</h3>
-    <div class="mode">
-      <label><input type="radio" name="bike_mode" value="pace" checked> Prędkość</label>
-      <label><input type="radio" name="bike_mode" value="time"> Czas</label>
+    <h3>Rower</h3>
+    <div class="seg" role="group" aria-label="Rower tryb">
+      <button id="bike_mode_speed" aria-pressed="true" type="button">Prędkość</button>
+      <button id="bike_mode_time" aria-pressed="false" type="button">Czas</button>
+      <button id="bike_mode_ftp" aria-pressed="false" type="button">FTP/IF</button>
     </div>
-    <div class="grid">
+
+    <div class="grid" id="bike_block_speed">
       <div><label for="bike_speed">Prędkość (km/h)</label><input id="bike_speed" inputmode="decimal" placeholder="np. 32"></div>
-      <div><label for="bike_time">Czas (mm:ss lub hh:mm:ss)</label><input id="bike_time" placeholder="np. 3:00:00"></div>
+      <div><label for="bike_time" class="muted">Czas (wylicza się automatycznie)</label><input id="bike_time" placeholder="np. 3:00:00" disabled></div>
     </div>
+
+    <div class="grid" id="bike_block_time" style="display:none">
+      <div><label for="bike_time_manual">Czas (mm:ss lub hh:mm:ss)</label><input id="bike_time_manual" placeholder="np. 3:00:00"></div>
+      <div><label for="bike_speed_calc" class="muted">Prędkość (wylicza się automatycznie)</label><input id="bike_speed_calc" placeholder="np. 32" disabled></div>
+    </div>
+
+    <div id="bike_block_ftp" style="display:none">
+      <div class="grid">
+        <div><label for="ftp">FTP (W)</label><input id="ftp" inputmode="numeric" placeholder="np. 260"></div>
+        <div><label for="if">IF (Intensity Factor)</label><input id="if" inputmode="decimal" placeholder="np. 0.80"></div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="grid3">
+        <div><label for="mass">Masa zawodnika (kg)</label><input id="mass" inputmode="decimal" placeholder="np. 97"></div>
+        <div><label for="bike_mass">Masa roweru+sprzętu (kg)</label><input id="bike_mass" inputmode="decimal" placeholder="np. 10"></div>
+        <div><label for="grade">Średnie nachylenie (%)</label><input id="grade" inputmode="decimal" placeholder="np. 0"></div>
+      </div>
+
+      <div class="grid3" style="margin-top:12px">
+        <div><label for="cda">CdA</label><input id="cda" inputmode="decimal" placeholder="np. 0.26"></div>
+        <div><label for="crr">Crr</label><input id="crr" inputmode="decimal" placeholder="np. 0.004"></div>
+        <div><label for="rho">Gęstość powietrza ρ</label><input id="rho" inputmode="decimal" placeholder="np. 1.226"></div>
+      </div>
+
+      <div class="grid" style="margin-top:12px">
+        <div><label for="wind">Wiatr (m/s) (+ w twarz)</label><input id="wind" inputmode="decimal" placeholder="np. 0"></div>
+        <div><label for="drivetrain">Sprawność napędu (0–1)</label><input id="drivetrain" inputmode="decimal" placeholder="np. 0.97"></div>
+      </div>
+
+      <div class="muted" style="margin-top:8px">
+        Model jest uproszczony (fizyka jazdy, bez zmian tempa / zakrętów / postojeń). Daje sensowną estymację „co jeśli”.
+      </div>
+    </div>
+
     <div class="out" id="out_bike">--:--:--</div>
   </div>
 
   <div class="card">
-    <h3 style="margin:0 0 8px;">Bieg</h3>
-    <div class="mode">
-      <label><input type="radio" name="run_mode" value="pace" checked> Tempo</label>
-      <label><input type="radio" name="run_mode" value="time"> Czas</label>
+    <h3>Bieg</h3>
+    <div class="seg" role="group" aria-label="Bieg tryb">
+      <button id="run_mode_pace" aria-pressed="true" type="button">Tempo</button>
+      <button id="run_mode_time" aria-pressed="false" type="button">Czas</button>
     </div>
     <div class="grid">
       <div><label for="run_pace">Tempo (mm:ss /km)</label><input id="run_pace" placeholder="np. 6:30"></div>
@@ -87,7 +147,7 @@
   </div>
 
   <div class="card">
-    <h3 style="margin:0 0 8px;">Zmiany</h3>
+    <h3>Zmiany</h3>
     <div class="grid">
       <div><label for="t1">T1 (mm:ss)</label><input id="t1" placeholder="np. 4:00"></div>
       <div><label for="t2">T2 (mm:ss)</label><input id="t2" placeholder="np. 3:00"></div>
@@ -95,9 +155,30 @@
   </div>
 
   <div class="card">
-    <h3 style="margin:0 0 8px;">Czas łączny</h3>
+    <h3>Czas łączny</h3>
     <div class="outbig" id="out_total">--:--:--</div>
     <div id="status" class="error">Uzupełnij dane</div>
+  </div>
+
+  <div class="card">
+    <h3>Symulacja „co jeśli” <span class="pill">delta</span></h3>
+    <div class="muted">Wpisz zmiany i zobacz różnicę całkowitego czasu (np. -5s/100m, +1 km/h, -10s/km).</div>
+
+    <div class="grid3" style="margin-top:12px">
+      <div><label for="d_swim">Pływanie (s / 100m)</label><input id="d_swim" inputmode="decimal" placeholder="np. -5"></div>
+      <div><label for="d_bike">Rower (km/h)</label><input id="d_bike" inputmode="decimal" placeholder="np. +1"></div>
+      <div><label for="d_run">Bieg (s / km)</label><input id="d_run" inputmode="decimal" placeholder="np. -10"></div>
+    </div>
+
+    <div class="grid" style="margin-top:12px">
+      <div><label for="d_t1">T1 (s)</label><input id="d_t1" inputmode="numeric" placeholder="np. -15"></div>
+      <div><label for="d_t2">T2 (s)</label><input id="d_t2" inputmode="numeric" placeholder="np. -10"></div>
+    </div>
+
+    <div class="out" style="margin-top:10px">
+      Nowy total: <span id="what_total">--:--:--</span><br/>
+      Różnica: <span id="what_delta">--</span>
+    </div>
   </div>
 </div>
 
@@ -113,37 +194,106 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const el = (id) => document.getElementById(id);
 
+  // Dist
   const race = el("race");
   const swim_m = el("swim_m");
   const bike_km = el("bike_km");
   const run_km = el("run_km");
   const dist_hint = el("dist_hint");
 
+  // Swim
   const swim_pace = el("swim_pace");
   const swim_time = el("swim_time");
+  const out_swim = el("out_swim");
+
+  // Bike
   const bike_speed = el("bike_speed");
-  const bike_time = el("bike_time");
+  const bike_time = el("bike_time"); // auto in speed/ftp mode
+  const bike_time_manual = el("bike_time_manual");
+  const bike_speed_calc = el("bike_speed_calc");
+  const out_bike = el("out_bike");
+
+  const bike_block_speed = el("bike_block_speed");
+  const bike_block_time = el("bike_block_time");
+  const bike_block_ftp = el("bike_block_ftp");
+
+  // FTP inputs
+  const ftp = el("ftp"), IF = el("if");
+  const mass = el("mass"), bike_mass = el("bike_mass"), grade = el("grade");
+  const cda = el("cda"), crr = el("crr"), rho = el("rho");
+  const wind = el("wind"), drivetrain = el("drivetrain");
+
+  // Run
   const run_pace = el("run_pace");
   const run_time = el("run_time");
-  const t1 = el("t1");
-  const t2 = el("t2");
-
-  const out_swim = el("out_swim");
-  const out_bike = el("out_bike");
   const out_run = el("out_run");
+
+  // T
+  const t1 = el("t1"), t2 = el("t2");
+
+  // Total
   const out_total = el("out_total");
   const status = el("status");
 
-  function getRadio(name){
-    const r = document.querySelector(`input[name="${name}"]:checked`);
-    return r ? r.value : null;
+  // What-if
+  const d_swim = el("d_swim"), d_bike = el("d_bike"), d_run = el("d_run"), d_t1 = el("d_t1"), d_t2 = el("d_t2");
+  const what_total = el("what_total"), what_delta = el("what_delta");
+
+  // Modes (segmented)
+  let swimMode = "pace"; // pace | time
+  let bikeMode = "speed"; // speed | time | ftp
+  let runMode  = "pace"; // pace | time
+
+  function setSeg(btnTrue, btnFalse){
+    btnTrue.setAttribute("aria-pressed", "true");
+    btnFalse.setAttribute("aria-pressed", "false");
+  }
+  function setSeg3(a, b, c, val){
+    const map = {a,b,c};
+    [a,b,c].forEach(x => x.setAttribute("aria-pressed", "false"));
+    val.setAttribute("aria-pressed", "true");
+  }
+
+  // Buttons
+  const swim_mode_pace = el("swim_mode_pace");
+  const swim_mode_time = el("swim_mode_time");
+  swim_mode_pace.addEventListener("click", () => { swimMode="pace"; setSeg(swim_mode_pace, swim_mode_time); calc(); });
+  swim_mode_time.addEventListener("click", () => { swimMode="time"; setSeg(swim_mode_time, swim_mode_pace); calc(); });
+
+  const bike_mode_speed = el("bike_mode_speed");
+  const bike_mode_time  = el("bike_mode_time");
+  const bike_mode_ftp   = el("bike_mode_ftp");
+  bike_mode_speed.addEventListener("click", () => { bikeMode="speed"; setSeg3(bike_mode_speed, bike_mode_time, bike_mode_ftp, bike_mode_speed); updateBikeBlocks(); calc(); });
+  bike_mode_time.addEventListener("click",  () => { bikeMode="time";  setSeg3(bike_mode_speed, bike_mode_time, bike_mode_ftp, bike_mode_time);  updateBikeBlocks(); calc(); });
+  bike_mode_ftp.addEventListener("click",   () => { bikeMode="ftp";   setSeg3(bike_mode_speed, bike_mode_time, bike_mode_ftp, bike_mode_ftp);   updateBikeBlocks(); calc(); });
+
+  const run_mode_pace = el("run_mode_pace");
+  const run_mode_time = el("run_mode_time");
+  run_mode_pace.addEventListener("click", () => { runMode="pace"; setSeg(run_mode_pace, run_mode_time); calc(); });
+  run_mode_time.addEventListener("click", () => { runMode="time"; setSeg(run_mode_time, run_mode_pace); calc(); });
+
+  function updateBikeBlocks(){
+    bike_block_speed.style.display = (bikeMode==="speed") ? "" : "none";
+    bike_block_time.style.display  = (bikeMode==="time")  ? "" : "none";
+    bike_block_ftp.style.display   = (bikeMode==="ftp")   ? "" : "none";
+
+    // enable/disable appropriate fields
+    bike_speed.disabled = (bikeMode!=="speed");
+    bike_time.disabled = true; // always computed in speed/ftp
+    bike_time_manual.disabled = (bikeMode!=="time");
   }
 
   function parseNumber(v){
     v = (v ?? "").toString().trim().replace(",", ".");
     if(!v) return null;
     const n = Number(v);
-    if(!Number.isFinite(n) || n <= 0) return null;
+    if(!Number.isFinite(n)) return null;
+    return n;
+  }
+
+  function parsePositive(v){
+    const n = parseNumber(v);
+    if(n == null || n <= 0) return null;
     return n;
   }
 
@@ -152,6 +302,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if(!v) return null;
     const parts = v.split(":").map(x => x.trim());
     if(parts.some(p => p === "")) return null;
+
     if(parts.length === 2){
       const mm = Number(parts[0]), ss = Number(parts[1]);
       if(!Number.isInteger(mm) || !Number.isInteger(ss) || mm < 0 || ss < 0 || ss >= 60) return null;
@@ -195,12 +346,40 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // --- FTP speed model (uproszczony) ---
+  // Solve for v (m/s): P = (F_roll + F_grav + F_aero) * v / drivetrain
+  function estimateSpeedFromPower(P_watts, params){
+    const g = 9.80665;
+    const m = params.mass_total;              // kg
+    const grade = params.grade;               // decimal (e.g. 0.01)
+    const Crr = params.crr;
+    const CdA = params.cda;
+    const rho = params.rho;
+    const wind = params.wind;                 // m/s, + headwind
+    const eta = params.eta;                   // drivetrain 0-1
+
+    // forces depend on v (aero)
+    const F_roll = Crr * m * g * Math.cos(Math.atan(grade));
+    const F_grav = m * g * Math.sin(Math.atan(grade));
+
+    // numeric solve via binary search on v in [0.1, 25] m/s (0.36–90 km/h)
+    let lo = 0.1, hi = 25.0;
+    for(let i=0;i<60;i++){
+      const v = (lo+hi)/2;
+      const v_air = v + wind;
+      const F_aero = 0.5 * rho * CdA * v_air * v_air;
+      const P_needed = (F_roll + F_grav + F_aero) * v / Math.max(eta, 0.01);
+      if(P_needed > P_watts) hi = v; else lo = v;
+    }
+    return lo; // m/s
+  }
+
   function calc(){
     const missing = [];
 
-    const sM = parseNumber(swim_m.value);
-    const bK = parseNumber(bike_km.value);
-    const rK = parseNumber(run_km.value);
+    const sM = parsePositive(swim_m.value);
+    const bK = parsePositive(bike_km.value);
+    const rK = parsePositive(run_km.value);
 
     if(sM == null) missing.push("dystans pływania");
     if(bK == null) missing.push("dystans roweru");
@@ -208,9 +387,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let swimSec = null, bikeSec = null, runSec = null;
 
-    // swim
+    // Swim
     if(sM != null){
-      if(getRadio("swim_mode") === "time"){
+      if(swimMode === "time"){
         swimSec = parseTimeToSeconds(swim_time.value);
         if(swimSec == null) missing.push("pływanie: czas");
       } else {
@@ -220,21 +399,70 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // bike
+    // Bike
     if(bK != null){
-      if(getRadio("bike_mode") === "time"){
-        bikeSec = parseTimeToSeconds(bike_time.value);
-        if(bikeSec == null) missing.push("rower: czas");
-      } else {
-        const spd = parseNumber(bike_speed.value);
+      if(bikeMode === "speed"){
+        const spd = parsePositive(bike_speed.value);
         if(spd == null) missing.push("rower: prędkość");
-        else bikeSec = (bK / spd) * 3600.0;
+        else {
+          bikeSec = (bK / spd) * 3600.0;
+          bike_time.value = fmt(bikeSec);
+        }
+      } else if(bikeMode === "time"){
+        bikeSec = parseTimeToSeconds(bike_time_manual.value);
+        if(bikeSec == null) missing.push("rower: czas");
+        else {
+          const spd = (bK / (bikeSec/3600.0));
+          bike_speed_calc.value = (Math.round(spd*10)/10).toString();
+        }
+      } else { // ftp
+        const ftpV = parsePositive(ftp.value);
+        const ifV  = parsePositive(IF.value);
+        if(ftpV == null) missing.push("FTP");
+        if(ifV == null)  missing.push("IF");
+
+        const mV = parsePositive(mass.value);
+        const bmV = parsePositive(bike_mass.value);
+        if(mV == null) missing.push("masa");
+        if(bmV == null) missing.push("masa roweru");
+
+        const gradeV = parseNumber(grade.value); // allow 0
+        const cdaV = parsePositive(cda.value);
+        const crrV = parsePositive(crr.value);
+        const rhoV = parsePositive(rho.value);
+        const windV = parseNumber(wind.value); // allow 0
+        const etaV = parsePositive(drivetrain.value);
+
+        if(gradeV == null) missing.push("nachylenie");
+        if(cdaV == null) missing.push("CdA");
+        if(crrV == null) missing.push("Crr");
+        if(rhoV == null) missing.push("ρ");
+        if(windV == null) missing.push("wiatr");
+        if(etaV == null) missing.push("sprawność napędu");
+
+        if(missing.length === 0){
+          const P = ftpV * ifV; // W (avg)
+          const v_ms = estimateSpeedFromPower(P, {
+            mass_total: mV + bmV,
+            grade: gradeV/100.0,
+            crr: crrV,
+            cda: cdaV,
+            rho: rhoV,
+            wind: windV,
+            eta: etaV
+          });
+          const spd_kmh = v_ms * 3.6;
+          bikeSec = (bK / spd_kmh) * 3600.0;
+          // show computed
+          bike_speed.value = (Math.round(spd_kmh*10)/10).toString();
+          bike_time.value = fmt(bikeSec);
+        }
       }
     }
 
-    // run
+    // Run
     if(rK != null){
-      if(getRadio("run_mode") === "time"){
+      if(runMode === "time"){
         runSec = parseTimeToSeconds(run_time.value);
         if(runSec == null) missing.push("bieg: czas");
       } else {
@@ -253,9 +481,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if(t1s == null) missing.push("T1");
     if(t2s == null) missing.push("T2");
 
+    let totalSec = null;
     if(missing.length === 0){
-      const total = swimSec + bikeSec + runSec + t1s + t2s;
-      out_total.textContent = fmt(total);
+      totalSec = swimSec + bikeSec + runSec + t1s + t2s;
+      out_total.textContent = fmt(totalSec);
       status.textContent = "OK — policzone.";
       status.className = "ok";
     } else {
@@ -263,17 +492,67 @@ document.addEventListener("DOMContentLoaded", () => {
       status.textContent = "Brakuje: " + missing.join(", ");
       status.className = "error";
     }
+
+    // What-if (only if we have a base total)
+    if(totalSec != null){
+      const dSw = parseNumber(d_swim.value) ?? 0; // s/100m
+      const dBk = parseNumber(d_bike.value) ?? 0; // km/h
+      const dRn = parseNumber(d_run.value) ?? 0;  // s/km
+      const dT1 = parseNumber(d_t1.value) ?? 0;   // s
+      const dT2 = parseNumber(d_t2.value) ?? 0;   // s
+
+      // compute “what if” by applying deltas to base inputs (only in pace/speed modes; if time mode, apply to time directly)
+      let swim2 = swimSec;
+      if(swimMode === "pace"){
+        const pace100 = parseTimeToSeconds(swim_pace.value);
+        if(pace100 != null){
+          const pace2 = Math.max(1, pace100 + dSw);
+          swim2 = (Math.round(sM) / 100.0) * pace2;
+        }
+      }
+
+      let bike2 = bikeSec;
+      if(bikeMode === "speed"){
+        const spd = parsePositive(bike_speed.value);
+        if(spd != null){
+          const spd2 = Math.max(0.1, spd + dBk);
+          bike2 = (bK / spd2) * 3600.0;
+        }
+      }
+
+      let run2 = runSec;
+      if(runMode === "pace"){
+        const pace = parseTimeToSeconds(run_pace.value);
+        if(pace != null){
+          const pace2 = Math.max(1, pace + dRn);
+          run2 = rK * pace2;
+        }
+      }
+
+      const total2 = swim2 + bike2 + run2 + (t1s + dT1) + (t2s + dT2);
+      const delta = total2 - totalSec;
+
+      what_total.textContent = fmt(total2);
+      const sign = delta >= 0 ? "+" : "-";
+      what_delta.textContent = `${sign}${fmt(Math.abs(delta))}`;
+    } else {
+      what_total.textContent = "--:--:--";
+      what_delta.textContent = "--";
+    }
   }
 
-  // listeners
-  race.addEventListener("change", () => { applyPreset(); calc(); });
-  document.querySelectorAll("input, select").forEach(x => {
-    x.addEventListener("input", calc);
-    x.addEventListener("change", calc);
-  });
+  function hookInputs(){
+    document.querySelectorAll("input, select").forEach(x => {
+      x.addEventListener("input", calc);
+      x.addEventListener("change", calc);
+    });
+    race.addEventListener("change", () => { applyPreset(); calc(); });
+  }
 
   // init
   applyPreset();
+  updateBikeBlocks();
+  hookInputs();
   calc();
 });
 </script>
