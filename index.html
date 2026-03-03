@@ -7,29 +7,29 @@
   <style>
     body { font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 16px; background:#f8f9fb;}
     .wrap { max-width: 900px; margin: 0 auto; }
-    h1 { font-size: 22px; }
+    h1 { font-size: 22px; margin: 0 0 10px; }
     .card { background:white; border-radius:12px; padding:16px; margin:12px 0; box-shadow:0 2px 6px rgba(0,0,0,0.08);}
     .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
-    label { font-weight:600; font-size:14px; }
+    label { font-weight:600; font-size:14px; display:block; margin-bottom:6px; }
     input, select { width:100%; padding:10px; font-size:16px; border-radius:8px; border:1px solid #ccc; }
-    .mode { display:flex; gap:12px; margin:8px 0; }
-    .mode label { font-weight:500; }
-    .out { font-family:monospace; font-size:18px; font-weight:bold; }
-    .outbig { font-family:monospace; font-size:22px; font-weight:bold; }
-    .error { color:#c40000; font-weight:bold; }
-    .ok { color:#0a7d28; font-weight:bold; }
-    @media(max-width:800px){
-      .grid, .grid3 { grid-template-columns:1fr; }
-    }
+    .mode { display:flex; gap:12px; margin:8px 0; flex-wrap: wrap; }
+    .mode label { font-weight:500; margin: 0; display:flex; align-items:center; gap:8px; }
+    .out { font-family: ui-monospace, Menlo, Consolas, monospace; font-size:18px; font-weight:900; margin-top:8px; }
+    .outbig { font-family: ui-monospace, Menlo, Consolas, monospace; font-size:22px; font-weight:900; }
+    .error { color:#c40000; font-weight:800; }
+    .ok { color:#0a7d28; font-weight:800; }
+    .muted { color:#666; font-size:12px; }
+    @media(max-width:800px){ .grid, .grid3 { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Kalkulator czasu triathlon</h1>
+  <div class="muted">Auto-przeliczanie. Presety uzupełniają dystanse. Total liczy się, gdy są: pływanie + rower + bieg + T1 + T2.</div>
 
   <div class="card">
-    <label>Dystans</label>
+    <label for="race">Dystans</label>
     <select id="race">
       <option value="Sprint">Sprint</option>
       <option value="Olimpijski">Olimpijski</option>
@@ -40,194 +40,242 @@
     </select>
 
     <div class="grid3" style="margin-top:12px">
-      <div>
-        <label>Pływanie (m)</label>
-        <input id="swim_m">
-      </div>
-      <div>
-        <label>Rower (km)</label>
-        <input id="bike_km">
-      </div>
-      <div>
-        <label>Bieg (km)</label>
-        <input id="run_km">
-      </div>
+      <div><label for="swim_m">Pływanie (m)</label><input id="swim_m" inputmode="numeric"></div>
+      <div><label for="bike_km">Rower (km)</label><input id="bike_km" inputmode="decimal"></div>
+      <div><label for="run_km">Bieg (km)</label><input id="run_km" inputmode="decimal"></div>
     </div>
+    <div class="muted" id="dist_hint" style="margin-top:8px"></div>
   </div>
 
   <div class="card">
-    <h3>Pływanie</h3>
+    <h3 style="margin:0 0 8px;">Pływanie</h3>
     <div class="mode">
       <label><input type="radio" name="swim_mode" value="pace" checked> Tempo</label>
       <label><input type="radio" name="swim_mode" value="time"> Czas</label>
     </div>
     <div class="grid">
-      <div>
-        <label>Tempo (mm:ss /100m)</label>
-        <input id="swim_pace">
-      </div>
-      <div>
-        <label>Czas</label>
-        <input id="swim_time">
-      </div>
+      <div><label for="swim_pace">Tempo (mm:ss /100m)</label><input id="swim_pace" placeholder="np. 2:10"></div>
+      <div><label for="swim_time">Czas (mm:ss lub hh:mm:ss)</label><input id="swim_time" placeholder="np. 32:00"></div>
     </div>
     <div class="out" id="out_swim">--:--:--</div>
   </div>
 
   <div class="card">
-    <h3>Rower</h3>
+    <h3 style="margin:0 0 8px;">Rower</h3>
     <div class="mode">
       <label><input type="radio" name="bike_mode" value="pace" checked> Prędkość</label>
       <label><input type="radio" name="bike_mode" value="time"> Czas</label>
     </div>
     <div class="grid">
-      <div>
-        <label>Prędkość (km/h)</label>
-        <input id="bike_speed">
-      </div>
-      <div>
-        <label>Czas</label>
-        <input id="bike_time">
-      </div>
+      <div><label for="bike_speed">Prędkość (km/h)</label><input id="bike_speed" inputmode="decimal" placeholder="np. 32"></div>
+      <div><label for="bike_time">Czas (mm:ss lub hh:mm:ss)</label><input id="bike_time" placeholder="np. 3:00:00"></div>
     </div>
     <div class="out" id="out_bike">--:--:--</div>
   </div>
 
   <div class="card">
-    <h3>Bieg</h3>
+    <h3 style="margin:0 0 8px;">Bieg</h3>
     <div class="mode">
       <label><input type="radio" name="run_mode" value="pace" checked> Tempo</label>
       <label><input type="radio" name="run_mode" value="time"> Czas</label>
     </div>
     <div class="grid">
-      <div>
-        <label>Tempo (mm:ss /km)</label>
-        <input id="run_pace">
-      </div>
-      <div>
-        <label>Czas</label>
-        <input id="run_time">
-      </div>
+      <div><label for="run_pace">Tempo (mm:ss /km)</label><input id="run_pace" placeholder="np. 6:30"></div>
+      <div><label for="run_time">Czas (mm:ss lub hh:mm:ss)</label><input id="run_time" placeholder="np. 2:20:00"></div>
     </div>
     <div class="out" id="out_run">--:--:--</div>
   </div>
 
   <div class="card">
-    <h3>Zmiany</h3>
+    <h3 style="margin:0 0 8px;">Zmiany</h3>
     <div class="grid">
-      <div>
-        <label>T1</label>
-        <input id="t1">
-      </div>
-      <div>
-        <label>T2</label>
-        <input id="t2">
-      </div>
+      <div><label for="t1">T1 (mm:ss)</label><input id="t1" placeholder="np. 4:00"></div>
+      <div><label for="t2">T2 (mm:ss)</label><input id="t2" placeholder="np. 3:00"></div>
     </div>
   </div>
 
   <div class="card">
-    <h3>Czas łączny</h3>
+    <h3 style="margin:0 0 8px;">Czas łączny</h3>
     <div class="outbig" id="out_total">--:--:--</div>
     <div id="status" class="error">Uzupełnij dane</div>
   </div>
-
 </div>
 
 <script>
-const PRESETS = {
-  "Sprint": { swim:750, bike:20, run:5 },
-  "Olimpijski": { swim:1500, bike:40, run:10 },
-  "1/4 IM": { swim:950, bike:45, run:10.55 },
-  "1/2 IM": { swim:1900, bike:90, run:21.1 },
-  "Pełny (IM)": { swim:3800, bike:180, run:42.2 }
-};
+document.addEventListener("DOMContentLoaded", () => {
+  const PRESETS = {
+    "Sprint": { swim:750, bike:20, run:5 },
+    "Olimpijski": { swim:1500, bike:40, run:10 },
+    "1/4 IM": { swim:950, bike:45, run:10.55 },
+    "1/2 IM": { swim:1900, bike:90, run:21.1 },
+    "Pełny (IM)": { swim:3800, bike:180, run:42.2 }
+  };
 
-function parseTime(t){
-  if(!t) return null;
-  const p = t.split(":").map(Number);
-  if(p.length===2) return p[0]*60+p[1];
-  if(p.length===3) return p[0]*3600+p[1]*60+p[2];
-  return null;
-}
+  const el = (id) => document.getElementById(id);
 
-function format(s){
-  if(s==null) return "--:--:--";
-  s=Math.round(s);
-  const h=Math.floor(s/3600);
-  const m=Math.floor((s%3600)/60);
-  const sec=s%60;
-  return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0");
-}
+  const race = el("race");
+  const swim_m = el("swim_m");
+  const bike_km = el("bike_km");
+  const run_km = el("run_km");
+  const dist_hint = el("dist_hint");
 
-function calc(){
-  try{
-    const swim_m=parseFloat(swim_m.value);
-    const bike_km=parseFloat(bike_km.value);
-    const run_km=parseFloat(run_km.value);
+  const swim_pace = el("swim_pace");
+  const swim_time = el("swim_time");
+  const bike_speed = el("bike_speed");
+  const bike_time = el("bike_time");
+  const run_pace = el("run_pace");
+  const run_time = el("run_time");
+  const t1 = el("t1");
+  const t2 = el("t2");
 
-    let swim=null,bike=null,run=null;
+  const out_swim = el("out_swim");
+  const out_bike = el("out_bike");
+  const out_run = el("out_run");
+  const out_total = el("out_total");
+  const status = el("status");
 
-    if(document.querySelector('input[name="swim_mode"]:checked').value==="time"){
-      swim=parseTime(swim_time.value);
-    }else{
-      const pace=parseTime(swim_pace.value);
-      if(pace) swim=swim_m/100*pace;
-    }
-
-    if(document.querySelector('input[name="bike_mode"]:checked').value==="time"){
-      bike=parseTime(bike_time.value);
-    }else{
-      const speed=parseFloat(bike_speed.value);
-      if(speed) bike=bike_km/speed*3600;
-    }
-
-    if(document.querySelector('input[name="run_mode"]:checked').value==="time"){
-      run=parseTime(run_time.value);
-    }else{
-      const pace=parseTime(run_pace.value);
-      if(pace) run=run_km*pace;
-    }
-
-    out_swim.textContent=format(swim);
-    out_bike.textContent=format(bike);
-    out_run.textContent=format(run);
-
-    const t1v=parseTime(t1.value);
-    const t2v=parseTime(t2.value);
-
-    if(swim&&bike&&run&&t1v&&t2v){
-      out_total.textContent=format(swim+bike+run+t1v+t2v);
-      status.textContent="OK";
-      status.className="ok";
-    }else{
-      out_total.textContent="--:--:--";
-      status.textContent="Uzupełnij wszystkie dane";
-      status.className="error";
-    }
-
-  }catch(e){
-    status.textContent="Błąd danych";
-    status.className="error";
+  function getRadio(name){
+    const r = document.querySelector(`input[name="${name}"]:checked`);
+    return r ? r.value : null;
   }
-}
 
-race.addEventListener("change",()=>{
-  if(PRESETS[race.value]){
-    swim_m.value=PRESETS[race.value].swim;
-    bike_km.value=PRESETS[race.value].bike;
-    run_km.value=PRESETS[race.value].run;
+  function parseNumber(v){
+    v = (v ?? "").toString().trim().replace(",", ".");
+    if(!v) return null;
+    const n = Number(v);
+    if(!Number.isFinite(n) || n <= 0) return null;
+    return n;
   }
+
+  function parseTimeToSeconds(v){
+    v = (v ?? "").toString().trim();
+    if(!v) return null;
+    const parts = v.split(":").map(x => x.trim());
+    if(parts.some(p => p === "")) return null;
+    if(parts.length === 2){
+      const mm = Number(parts[0]), ss = Number(parts[1]);
+      if(!Number.isInteger(mm) || !Number.isInteger(ss) || mm < 0 || ss < 0 || ss >= 60) return null;
+      return mm*60 + ss;
+    }
+    if(parts.length === 3){
+      const hh = Number(parts[0]), mm = Number(parts[1]), ss = Number(parts[2]);
+      if(!Number.isInteger(hh) || !Number.isInteger(mm) || !Number.isInteger(ss) || hh < 0 || mm < 0 || ss < 0 || mm >= 60 || ss >= 60) return null;
+      return hh*3600 + mm*60 + ss;
+    }
+    return null;
+  }
+
+  function fmt(sec){
+    if(sec == null) return "--:--:--";
+    sec = Math.max(0, Math.round(sec));
+    const h = Math.floor(sec/3600);
+    const m = Math.floor((sec%3600)/60);
+    const s = sec%60;
+    return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+  }
+
+  function applyPreset(){
+    const val = race.value;
+    const isCustom = (val === "Własny");
+
+    swim_m.disabled = !isCustom;
+    bike_km.disabled = !isCustom;
+    run_km.disabled  = !isCustom;
+    swim_m.style.opacity = isCustom ? "1" : "0.7";
+    bike_km.style.opacity = isCustom ? "1" : "0.7";
+    run_km.style.opacity  = isCustom ? "1" : "0.7";
+
+    if(!isCustom && PRESETS[val]){
+      swim_m.value = String(PRESETS[val].swim);
+      bike_km.value = String(PRESETS[val].bike);
+      run_km.value  = String(PRESETS[val].run);
+      dist_hint.textContent = "Preset: dystanse ustawione automatycznie.";
+    } else {
+      dist_hint.textContent = "Własny: wpisz dystanse ręcznie.";
+    }
+  }
+
+  function calc(){
+    const missing = [];
+
+    const sM = parseNumber(swim_m.value);
+    const bK = parseNumber(bike_km.value);
+    const rK = parseNumber(run_km.value);
+
+    if(sM == null) missing.push("dystans pływania");
+    if(bK == null) missing.push("dystans roweru");
+    if(rK == null) missing.push("dystans biegu");
+
+    let swimSec = null, bikeSec = null, runSec = null;
+
+    // swim
+    if(sM != null){
+      if(getRadio("swim_mode") === "time"){
+        swimSec = parseTimeToSeconds(swim_time.value);
+        if(swimSec == null) missing.push("pływanie: czas");
+      } else {
+        const pace100 = parseTimeToSeconds(swim_pace.value);
+        if(pace100 == null) missing.push("pływanie: tempo");
+        else swimSec = (Math.round(sM) / 100.0) * pace100;
+      }
+    }
+
+    // bike
+    if(bK != null){
+      if(getRadio("bike_mode") === "time"){
+        bikeSec = parseTimeToSeconds(bike_time.value);
+        if(bikeSec == null) missing.push("rower: czas");
+      } else {
+        const spd = parseNumber(bike_speed.value);
+        if(spd == null) missing.push("rower: prędkość");
+        else bikeSec = (bK / spd) * 3600.0;
+      }
+    }
+
+    // run
+    if(rK != null){
+      if(getRadio("run_mode") === "time"){
+        runSec = parseTimeToSeconds(run_time.value);
+        if(runSec == null) missing.push("bieg: czas");
+      } else {
+        const pace = parseTimeToSeconds(run_pace.value);
+        if(pace == null) missing.push("bieg: tempo");
+        else runSec = rK * pace;
+      }
+    }
+
+    out_swim.textContent = fmt(swimSec);
+    out_bike.textContent = fmt(bikeSec);
+    out_run.textContent  = fmt(runSec);
+
+    const t1s = parseTimeToSeconds(t1.value);
+    const t2s = parseTimeToSeconds(t2.value);
+    if(t1s == null) missing.push("T1");
+    if(t2s == null) missing.push("T2");
+
+    if(missing.length === 0){
+      const total = swimSec + bikeSec + runSec + t1s + t2s;
+      out_total.textContent = fmt(total);
+      status.textContent = "OK — policzone.";
+      status.className = "ok";
+    } else {
+      out_total.textContent = "--:--:--";
+      status.textContent = "Brakuje: " + missing.join(", ");
+      status.className = "error";
+    }
+  }
+
+  // listeners
+  race.addEventListener("change", () => { applyPreset(); calc(); });
+  document.querySelectorAll("input, select").forEach(x => {
+    x.addEventListener("input", calc);
+    x.addEventListener("change", calc);
+  });
+
+  // init
+  applyPreset();
   calc();
 });
-
-document.querySelectorAll("input,select").forEach(e=>{
-  e.addEventListener("input",calc);
-  e.addEventListener("change",calc);
-});
-
-race.dispatchEvent(new Event("change"));
 </script>
-
 </body>
 </html>
