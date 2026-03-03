@@ -377,7 +377,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Total/status
   const out_total = el("out_total"), status = el("status");
-  const total_card = el("total_card");
 
   // What-if
   const d_swim = el("d_swim"), d_bike = el("d_bike"), d_run = el("d_run"), d_t1 = el("d_t1"), d_t2 = el("d_t2");
@@ -495,32 +494,13 @@ document.addEventListener("DOMContentLoaded", () => {
     return (inputEl?.value ?? "").toString().trim().length > 0;
   }
 
-  /* ---------- validation UI helpers ---------- */
+  /* validation UI helpers */
   function clearNeed(){
     document.querySelectorAll(".need").forEach(x=>x.classList.remove("need"));
     document.querySelectorAll(".hint.show").forEach(x=>x.classList.remove("show"));
   }
   function showHint(hintEl, on){ if(!hintEl) return; hintEl.classList.toggle("show", !!on); }
   function markNeed(elem, bad){ if(!elem) return; elem.classList.toggle("need", !!bad); }
-
-  // smooth scroll to first missing field (throttled + "after typing")
-  let lastScrollAt = 0;
-  let lastInputAt = 0;
-
-  function scrollToFirstError(firstElem){
-    if(!firstElem) return;
-    const now = Date.now();
-
-    // don't scroll while user is actively typing
-    if(now - lastInputAt < 700) return;
-
-    // throttle scrolling
-    if(now - lastScrollAt < 1200) return;
-    lastScrollAt = now;
-
-    // scroll only (NO focus!)
-    firstElem.scrollIntoView({ behavior:"smooth", block:"center" });
-  }
 
   function applyRacePreset(){
     const val = race.value;
@@ -566,17 +546,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function calc(){
     clearNeed();
-
-    let firstError = null;
     const missing = [];
 
     const sM = parsePositive(swim_m.value);
     const bK = parsePositive(bike_km.value);
     const rK = parsePositive(run_km.value);
 
-    if(sM==null){ markNeed(swim_m,true); if(!firstError) firstError=swim_m; missing.push("dystans pływania"); }
-    if(bK==null){ markNeed(bike_km,true); if(!firstError) firstError=bike_km; missing.push("dystans roweru"); }
-    if(rK==null){ markNeed(run_km,true);  if(!firstError) firstError=run_km;  missing.push("dystans biegu"); }
+    if(sM==null){ markNeed(swim_m,true); missing.push("dystans pływania"); }
+    if(bK==null){ markNeed(bike_km,true); missing.push("dystans roweru"); }
+    if(rK==null){ markNeed(run_km,true);  missing.push("dystans biegu"); }
 
     let swimSec=null, bikeSec=null, runSec=null;
 
@@ -588,14 +566,14 @@ document.addEventListener("DOMContentLoaded", () => {
         markNeed(swim_time,bad);
         showHint(H.swim_time, bad && hasValue(swim_time));
         showHint(H.swim_pace,false); markNeed(swim_pace,false);
-        if(bad){ if(!firstError) firstError=swim_time; missing.push("pływanie: czas"); }
+        if(bad) missing.push("pływanie: czas");
       } else {
         const pace100 = parseTimeToSeconds(swim_pace.value);
         const bad = (pace100==null);
         markNeed(swim_pace,bad);
         showHint(H.swim_pace, bad && hasValue(swim_pace));
         showHint(H.swim_time,false); markNeed(swim_time,false);
-        if(bad){ if(!firstError) firstError=swim_pace; missing.push("pływanie: tempo"); }
+        if(bad) missing.push("pływanie: tempo");
         else swimSec = (Math.round(sM)/100.0)*pace100;
       }
     }
@@ -610,7 +588,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if(bike_time_manual){ markNeed(bike_time_manual,false); showHint(H.bike_time_manual,false); }
         [ftp, IF, mass, bike_mass, grade, cda, crr, rho, wind, drivetrain].forEach(x=>markNeed(x,false));
 
-        if(bad){ if(!firstError) firstError=bike_speed; missing.push("rower: prędkość"); }
+        if(bad) missing.push("rower: prędkość");
         else {
           bikeSec = (bK/spd)*3600.0;
           bike_time.value = fmt(bikeSec);
@@ -623,7 +601,7 @@ document.addEventListener("DOMContentLoaded", () => {
         markNeed(bike_speed,false); showHint(H.bike_speed,false);
         [ftp, IF, mass, bike_mass, grade, cda, crr, rho, wind, drivetrain].forEach(x=>markNeed(x,false));
 
-        if(bad){ if(!firstError) firstError=bike_time_manual; missing.push("rower: czas"); }
+        if(bad) missing.push("rower: czas");
         else {
           const spd = (bK/(bikeSec/3600.0));
           bike_speed_calc.value = (Math.round(spd*10)/10).toString();
@@ -657,10 +635,7 @@ document.addEventListener("DOMContentLoaded", () => {
         checks.forEach(([field,bad,hint,label])=>{
           markNeed(field,bad);
           showHint(hint, bad && hasValue(field));
-          if(bad){
-            if(!firstError) firstError=field;
-            missing.push(label);
-          }
+          if(bad) missing.push(label);
         });
 
         markNeed(bike_speed,false); showHint(H.bike_speed,false);
@@ -693,14 +668,14 @@ document.addEventListener("DOMContentLoaded", () => {
         markNeed(run_time,bad);
         showHint(H.run_time, bad && hasValue(run_time));
         markNeed(run_pace,false); showHint(H.run_pace,false);
-        if(bad){ if(!firstError) firstError=run_time; missing.push("bieg: czas"); }
+        if(bad) missing.push("bieg: czas");
       } else {
         const pace = parseTimeToSeconds(run_pace.value);
         const bad = (pace==null);
         markNeed(run_pace,bad);
         showHint(H.run_pace, bad && hasValue(run_pace));
         markNeed(run_time,false); showHint(H.run_time,false);
-        if(bad){ if(!firstError) firstError=run_pace; missing.push("bieg: tempo"); }
+        if(bad) missing.push("bieg: tempo");
         else runSec = rK*pace;
       }
     }
@@ -716,14 +691,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if(t1s==null){
       markNeed(t1,true);
       showHint(H.t1, hasValue(t1));
-      if(!firstError) firstError=t1;
       missing.push("T1");
     } else { markNeed(t1,false); showHint(H.t1,false); }
 
     if(t2s==null){
       markNeed(t2,true);
       showHint(H.t2, hasValue(t2));
-      if(!firstError) firstError=t2;
       missing.push("T2");
     } else { markNeed(t2,false); showHint(H.t2,false); }
 
@@ -778,22 +751,20 @@ document.addEventListener("DOMContentLoaded", () => {
       status.className = "error";
       what_total.textContent = "--:--:--";
       what_delta.textContent = "--";
-
-      scrollToFirstError(firstError || total_card);
     }
   }
 
   function hookInputs(){
-    race.addEventListener("change", () => { lastInputAt = Date.now(); applyRacePreset(); calc(); });
+    race.addEventListener("change", () => { applyRacePreset(); calc(); });
 
     [if_preset, grade_preset, cda_preset, crr_preset, air_preset, wind_preset, eta_preset].forEach(sel=>{
       if(!sel) return;
-      sel.addEventListener("change", () => { lastInputAt = Date.now(); applyFtpPresets(); calc(); });
+      sel.addEventListener("change", () => { applyFtpPresets(); calc(); });
     });
 
     document.querySelectorAll("input, select").forEach(x=>{
-      x.addEventListener("input", () => { lastInputAt = Date.now(); calc(); });
-      x.addEventListener("change", () => { lastInputAt = Date.now(); calc(); });
+      x.addEventListener("input", calc);
+      x.addEventListener("change", calc);
     });
   }
 
