@@ -19,18 +19,19 @@
     .outbig { font-family: ui-monospace, Menlo, Consolas, monospace; font-size:22px; font-weight:900; }
     .error { color:#c40000; font-weight:800; }
     .ok { color:#0a7d28; font-weight:800; }
+    .hr { height:1px; background:#eee; margin:12px 0; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#f0f2f6; font-size:12px; font-weight:700; color:#333; }
 
-    /* iOS-friendly segmented toggles (zamiast radio obok tekstu) */
+    /* iOS-friendly segmented toggles */
     .seg { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 6px; }
     .seg button {
-      appearance: none;
-      -webkit-appearance: none;
+      appearance: none; -webkit-appearance: none;
       border: 1px solid #d0d0d0;
       background: #fff;
       padding: 10px 12px;
       border-radius: 10px;
       font-size: 16px;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
     }
     .seg button[aria-pressed="true"]{
@@ -38,9 +39,6 @@
       background:#111;
       color:#fff;
     }
-
-    .hr { height:1px; background:#eee; margin:12px 0; }
-    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#f0f2f6; font-size:12px; font-weight:700; color:#333; }
 
     @media(max-width:800px){ .grid, .grid3 { grid-template-columns:1fr; } }
   </style>
@@ -111,22 +109,90 @@
       <div class="grid3">
         <div><label for="mass">Masa zawodnika (kg)</label><input id="mass" inputmode="decimal" placeholder="np. 97"></div>
         <div><label for="bike_mass">Masa roweru+sprzętu (kg)</label><input id="bike_mass" inputmode="decimal" placeholder="np. 10"></div>
-        <div><label for="grade">Średnie nachylenie (%)</label><input id="grade" inputmode="decimal" placeholder="np. 0"></div>
+        <div>
+          <label for="grade_preset">Nachylenie</label>
+          <select id="grade_preset">
+            <option value="custom">Ręcznie</option>
+            <option value="flat" selected>Płasko (0%)</option>
+            <option value="rolling">Pofałdowane (1%)</option>
+            <option value="hills">Górki (3%)</option>
+            <option value="down">Z górki (-1%)</option>
+          </select>
+          <div style="height:8px"></div>
+          <input id="grade" inputmode="decimal" placeholder="np. 0">
+        </div>
       </div>
 
-      <div class="grid3" style="margin-top:12px">
-        <div><label for="cda">CdA</label><input id="cda" inputmode="decimal" placeholder="np. 0.26"></div>
-        <div><label for="crr">Crr</label><input id="crr" inputmode="decimal" placeholder="np. 0.004"></div>
-        <div><label for="rho">Gęstość powietrza ρ</label><input id="rho" inputmode="decimal" placeholder="np. 1.226"></div>
+      <div class="hr"></div>
+
+      <div class="grid3">
+        <div>
+          <label for="cda_preset">Pozycja / CdA</label>
+          <select id="cda_preset">
+            <option value="custom">Ręcznie</option>
+            <option value="aero">Aero (0.23)</option>
+            <option value="mid" selected>Średnio (0.26)</option>
+            <option value="comfort">Komfort (0.30)</option>
+          </select>
+          <div style="height:8px"></div>
+          <input id="cda" inputmode="decimal" placeholder="np. 0.26">
+        </div>
+
+        <div>
+          <label for="crr_preset">Nawierzchnia / Crr</label>
+          <select id="crr_preset">
+            <option value="custom">Ręcznie</option>
+            <option value="fast">Szybko (0.003)</option>
+            <option value="standard" selected>Standard (0.004)</option>
+            <option value="rough">Słabo (0.006)</option>
+          </select>
+          <div style="height:8px"></div>
+          <input id="crr" inputmode="decimal" placeholder="np. 0.004">
+        </div>
+
+        <div>
+          <label for="air_preset">Powietrze (ρ)</label>
+          <select id="air_preset">
+            <option value="custom">Ręcznie</option>
+            <option value="standard" selected>Standard (1.226)</option>
+            <option value="cold">Zimno (1.30)</option>
+            <option value="hot">Gorąco (1.15)</option>
+            <option value="high">Wysoko (1.06)</option>
+          </select>
+          <div style="height:8px"></div>
+          <input id="rho" inputmode="decimal" placeholder="np. 1.226">
+        </div>
       </div>
 
       <div class="grid" style="margin-top:12px">
-        <div><label for="wind">Wiatr (m/s) (+ w twarz)</label><input id="wind" inputmode="decimal" placeholder="np. 0"></div>
-        <div><label for="drivetrain">Sprawność napędu (0–1)</label><input id="drivetrain" inputmode="decimal" placeholder="np. 0.97"></div>
+        <div>
+          <label for="wind_preset">Wiatr (m/s) (+ w twarz)</label>
+          <select id="wind_preset">
+            <option value="custom">Ręcznie</option>
+            <option value="calm" selected>Bez wiatru (0)</option>
+            <option value="breeze">Lekki (2)</option>
+            <option value="windy">Mocny (5)</option>
+            <option value="tail">Z tyłu (-2)</option>
+          </select>
+          <div style="height:8px"></div>
+          <input id="wind" inputmode="decimal" placeholder="np. 0">
+        </div>
+
+        <div>
+          <label for="eta_preset">Sprawność napędu</label>
+          <select id="eta_preset">
+            <option value="custom">Ręcznie</option>
+            <option value="best">Bardzo dobra (0.98)</option>
+            <option value="good" selected>Dobra (0.97)</option>
+            <option value="ok">OK (0.95)</option>
+          </select>
+          <div style="height:8px"></div>
+          <input id="drivetrain" inputmode="decimal" placeholder="np. 0.97">
+        </div>
       </div>
 
-      <div class="muted" style="margin-top:8px">
-        Model jest uproszczony (fizyka jazdy, bez zmian tempa / zakrętów / postojeń). Daje sensowną estymację „co jeśli”.
+      <div class="muted" style="margin-top:10px">
+        Model jest uproszczony (fizyka jazdy). Świetny do „co jeśli” (aero vs komfort, wiatr, nawierzchnia, górki).
       </div>
     </div>
 
@@ -219,9 +285,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // FTP inputs
   const ftp = el("ftp"), IF = el("if");
-  const mass = el("mass"), bike_mass = el("bike_mass"), grade = el("grade");
-  const cda = el("cda"), crr = el("crr"), rho = el("rho");
-  const wind = el("wind"), drivetrain = el("drivetrain");
+  const mass = el("mass"), bike_mass = el("bike_mass");
+  const grade_preset = el("grade_preset"), grade = el("grade");
+  const cda_preset = el("cda_preset"), cda = el("cda");
+  const crr_preset = el("crr_preset"), crr = el("crr");
+  const air_preset = el("air_preset"), rho = el("rho");
+  const wind_preset = el("wind_preset"), wind = el("wind");
+  const eta_preset = el("eta_preset"), drivetrain = el("drivetrain");
 
   // Run
   const run_pace = el("run_pace");
@@ -244,31 +314,31 @@ document.addEventListener("DOMContentLoaded", () => {
   let bikeMode = "speed"; // speed | time | ftp
   let runMode  = "pace"; // pace | time
 
+  // Seg buttons
+  const swim_mode_pace = el("swim_mode_pace");
+  const swim_mode_time = el("swim_mode_time");
+  const bike_mode_speed = el("bike_mode_speed");
+  const bike_mode_time  = el("bike_mode_time");
+  const bike_mode_ftp   = el("bike_mode_ftp");
+  const run_mode_pace = el("run_mode_pace");
+  const run_mode_time = el("run_mode_time");
+
   function setSeg(btnTrue, btnFalse){
     btnTrue.setAttribute("aria-pressed", "true");
     btnFalse.setAttribute("aria-pressed", "false");
   }
   function setSeg3(a, b, c, val){
-    const map = {a,b,c};
     [a,b,c].forEach(x => x.setAttribute("aria-pressed", "false"));
     val.setAttribute("aria-pressed", "true");
   }
 
-  // Buttons
-  const swim_mode_pace = el("swim_mode_pace");
-  const swim_mode_time = el("swim_mode_time");
   swim_mode_pace.addEventListener("click", () => { swimMode="pace"; setSeg(swim_mode_pace, swim_mode_time); calc(); });
   swim_mode_time.addEventListener("click", () => { swimMode="time"; setSeg(swim_mode_time, swim_mode_pace); calc(); });
 
-  const bike_mode_speed = el("bike_mode_speed");
-  const bike_mode_time  = el("bike_mode_time");
-  const bike_mode_ftp   = el("bike_mode_ftp");
   bike_mode_speed.addEventListener("click", () => { bikeMode="speed"; setSeg3(bike_mode_speed, bike_mode_time, bike_mode_ftp, bike_mode_speed); updateBikeBlocks(); calc(); });
   bike_mode_time.addEventListener("click",  () => { bikeMode="time";  setSeg3(bike_mode_speed, bike_mode_time, bike_mode_ftp, bike_mode_time);  updateBikeBlocks(); calc(); });
-  bike_mode_ftp.addEventListener("click",   () => { bikeMode="ftp";   setSeg3(bike_mode_speed, bike_mode_time, bike_mode_ftp, bike_mode_ftp);   updateBikeBlocks(); calc(); });
+  bike_mode_ftp.addEventListener("click",   () => { bikeMode="ftp";   setSeg3(bike_mode_speed, bike_mode_time, bike_mode_ftp, bike_mode_ftp);   updateBikeBlocks(); applyFtpPresets(); calc(); });
 
-  const run_mode_pace = el("run_mode_pace");
-  const run_mode_time = el("run_mode_time");
   run_mode_pace.addEventListener("click", () => { runMode="pace"; setSeg(run_mode_pace, run_mode_time); calc(); });
   run_mode_time.addEventListener("click", () => { runMode="time"; setSeg(run_mode_time, run_mode_pace); calc(); });
 
@@ -277,10 +347,28 @@ document.addEventListener("DOMContentLoaded", () => {
     bike_block_time.style.display  = (bikeMode==="time")  ? "" : "none";
     bike_block_ftp.style.display   = (bikeMode==="ftp")   ? "" : "none";
 
-    // enable/disable appropriate fields
     bike_speed.disabled = (bikeMode!=="speed");
     bike_time.disabled = true; // always computed in speed/ftp
     bike_time_manual.disabled = (bikeMode!=="time");
+  }
+
+  // Preset values
+  const PRESET_VALS = {
+    grade: { flat: 0, rolling: 1, hills: 3, down: -1 },
+    cda:   { aero: 0.23, mid: 0.26, comfort: 0.30 },
+    crr:   { fast: 0.003, standard: 0.004, rough: 0.006 },
+    air:   { standard: 1.226, cold: 1.30, hot: 1.15, high: 1.06 },
+    wind:  { calm: 0, breeze: 2, windy: 5, tail: -2 },
+    eta:   { best: 0.98, good: 0.97, ok: 0.95 }
+  };
+
+  function applyFtpPresets(){
+    if (grade_preset && grade_preset.value !== "custom") grade.value = PRESET_VALS.grade[grade_preset.value].toString();
+    if (cda_preset && cda_preset.value !== "custom") cda.value = PRESET_VALS.cda[cda_preset.value].toString();
+    if (crr_preset && crr_preset.value !== "custom") crr.value = PRESET_VALS.crr[crr_preset.value].toString();
+    if (air_preset && air_preset.value !== "custom") rho.value = PRESET_VALS.air[air_preset.value].toString();
+    if (wind_preset && wind_preset.value !== "custom") wind.value = PRESET_VALS.wind[wind_preset.value].toString();
+    if (eta_preset && eta_preset.value !== "custom") drivetrain.value = PRESET_VALS.eta[eta_preset.value].toString();
   }
 
   function parseNumber(v){
@@ -290,13 +378,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if(!Number.isFinite(n)) return null;
     return n;
   }
-
   function parsePositive(v){
     const n = parseNumber(v);
     if(n == null || n <= 0) return null;
     return n;
   }
-
   function parseTimeToSeconds(v){
     v = (v ?? "").toString().trim();
     if(!v) return null;
@@ -315,7 +401,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return null;
   }
-
   function fmt(sec){
     if(sec == null) return "--:--:--";
     sec = Math.max(0, Math.round(sec));
@@ -346,32 +431,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- FTP speed model (uproszczony) ---
-  // Solve for v (m/s): P = (F_roll + F_grav + F_aero) * v / drivetrain
+  // FTP speed model: binary solve
   function estimateSpeedFromPower(P_watts, params){
     const g = 9.80665;
-    const m = params.mass_total;              // kg
-    const grade = params.grade;               // decimal (e.g. 0.01)
+    const m = params.mass_total;
+    const gradeDec = params.grade;
     const Crr = params.crr;
     const CdA = params.cda;
-    const rho = params.rho;
-    const wind = params.wind;                 // m/s, + headwind
-    const eta = params.eta;                   // drivetrain 0-1
+    const rhoV = params.rho;
+    const windV = params.wind;
+    const eta = params.eta;
 
-    // forces depend on v (aero)
-    const F_roll = Crr * m * g * Math.cos(Math.atan(grade));
-    const F_grav = m * g * Math.sin(Math.atan(grade));
+    const theta = Math.atan(gradeDec);
+    const F_roll = Crr * m * g * Math.cos(theta);
+    const F_grav = m * g * Math.sin(theta);
 
-    // numeric solve via binary search on v in [0.1, 25] m/s (0.36–90 km/h)
-    let lo = 0.1, hi = 25.0;
+    let lo = 0.1, hi = 25.0; // m/s
     for(let i=0;i<60;i++){
       const v = (lo+hi)/2;
-      const v_air = v + wind;
-      const F_aero = 0.5 * rho * CdA * v_air * v_air;
-      const P_needed = (F_roll + F_grav + F_aero) * v / Math.max(eta, 0.01);
-      if(P_needed > P_watts) hi = v; else lo = v;
+      const v_air = v + windV;
+      const F_aero = 0.5 * rhoV * CdA * v_air * v_air;
+      const P_need = (F_roll + F_grav + F_aero) * v / Math.max(eta, 0.01);
+      if(P_need > P_watts) hi = v; else lo = v;
     }
-    return lo; // m/s
+    return lo;
   }
 
   function calc(){
@@ -416,6 +499,9 @@ document.addEventListener("DOMContentLoaded", () => {
           bike_speed_calc.value = (Math.round(spd*10)/10).toString();
         }
       } else { // ftp
+        // ensure preset-applied values are present (if user changed select)
+        applyFtpPresets();
+
         const ftpV = parsePositive(ftp.value);
         const ifV  = parsePositive(IF.value);
         if(ftpV == null) missing.push("FTP");
@@ -426,11 +512,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if(mV == null) missing.push("masa");
         if(bmV == null) missing.push("masa roweru");
 
-        const gradeV = parseNumber(grade.value); // allow 0
+        const gradeV = parseNumber(grade.value); // allow 0, allow negative
         const cdaV = parsePositive(cda.value);
         const crrV = parsePositive(crr.value);
         const rhoV = parsePositive(rho.value);
-        const windV = parseNumber(wind.value); // allow 0
+        const windV = parseNumber(wind.value); // allow 0, allow negative
         const etaV = parsePositive(drivetrain.value);
 
         if(gradeV == null) missing.push("nachylenie");
@@ -441,7 +527,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if(etaV == null) missing.push("sprawność napędu");
 
         if(missing.length === 0){
-          const P = ftpV * ifV; // W (avg)
+          const P = ftpV * ifV;
           const v_ms = estimateSpeedFromPower(P, {
             mass_total: mV + bmV,
             grade: gradeV/100.0,
@@ -453,7 +539,6 @@ document.addEventListener("DOMContentLoaded", () => {
           });
           const spd_kmh = v_ms * 3.6;
           bikeSec = (bK / spd_kmh) * 3600.0;
-          // show computed
           bike_speed.value = (Math.round(spd_kmh*10)/10).toString();
           bike_time.value = fmt(bikeSec);
         }
@@ -493,7 +578,7 @@ document.addEventListener("DOMContentLoaded", () => {
       status.className = "error";
     }
 
-    // What-if (only if we have a base total)
+    // What-if (if base total available)
     if(totalSec != null){
       const dSw = parseNumber(d_swim.value) ?? 0; // s/100m
       const dBk = parseNumber(d_bike.value) ?? 0; // km/h
@@ -501,7 +586,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const dT1 = parseNumber(d_t1.value) ?? 0;   // s
       const dT2 = parseNumber(d_t2.value) ?? 0;   // s
 
-      // compute “what if” by applying deltas to base inputs (only in pace/speed modes; if time mode, apply to time directly)
       let swim2 = swimSec;
       if(swimMode === "pace"){
         const pace100 = parseTimeToSeconds(swim_pace.value);
@@ -542,16 +626,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function hookInputs(){
+    // presets in ftp block
+    [grade_preset, cda_preset, crr_preset, air_preset, wind_preset, eta_preset].forEach(sel => {
+      if (!sel) return;
+      sel.addEventListener("change", () => { applyFtpPresets(); calc(); });
+    });
+
     document.querySelectorAll("input, select").forEach(x => {
       x.addEventListener("input", calc);
       x.addEventListener("change", calc);
     });
+
     race.addEventListener("change", () => { applyPreset(); calc(); });
   }
 
   // init
   applyPreset();
   updateBikeBlocks();
+  applyFtpPresets();
   hookInputs();
   calc();
 });
