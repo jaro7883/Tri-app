@@ -496,6 +496,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60;
     return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
   }
+  function hasValue(inputEl){
+    return (inputEl?.value ?? "").toString().trim().length > 0;
+  }
 
   /* ---------- validation UI helpers ---------- */
   function clearNeed(){
@@ -510,11 +513,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function scrollToFirstError(firstElem){
     if(!firstElem) return;
     const now = Date.now();
-    if(now - lastScrollAt < 900) return; // throttle
+    if(now - lastScrollAt < 900) return;
     lastScrollAt = now;
 
     firstElem.scrollIntoView({ behavior:"smooth", block:"center" });
-    // focus without opening keyboard aggressively:
     try { firstElem.focus({ preventScroll:true }); } catch(e) {}
   }
 
@@ -581,13 +583,15 @@ document.addEventListener("DOMContentLoaded", () => {
       if(swimMode==="time"){
         swimSec = parseTimeToSeconds(swim_time.value);
         const bad = (swimSec==null);
-        markNeed(swim_time,bad); showHint(H.swim_time, bad);
+        markNeed(swim_time,bad);
+        showHint(H.swim_time, bad && hasValue(swim_time));
         showHint(H.swim_pace,false); markNeed(swim_pace,false);
         if(bad){ if(!firstError) firstError=swim_time; missing.push("pływanie: czas"); }
       } else {
         const pace100 = parseTimeToSeconds(swim_pace.value);
         const bad = (pace100==null);
-        markNeed(swim_pace,bad); showHint(H.swim_pace, bad);
+        markNeed(swim_pace,bad);
+        showHint(H.swim_pace, bad && hasValue(swim_pace));
         showHint(H.swim_time,false); markNeed(swim_time,false);
         if(bad){ if(!firstError) firstError=swim_pace; missing.push("pływanie: tempo"); }
         else swimSec = (Math.round(sM)/100.0)*pace100;
@@ -599,11 +603,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if(bikeMode==="speed"){
         const spd = parsePositive(bike_speed.value);
         const bad = (spd==null);
-        markNeed(bike_speed,bad); showHint(H.bike_speed, bad);
+        markNeed(bike_speed,bad);
+        showHint(H.bike_speed, bad && hasValue(bike_speed));
         if(bike_time_manual){ markNeed(bike_time_manual,false); showHint(H.bike_time_manual,false); }
-        // FTP fields not required here
         [ftp, IF, mass, bike_mass, grade, cda, crr, rho, wind, drivetrain].forEach(x=>markNeed(x,false));
-        Object.values(H).forEach(h=> { /* keep only those shown by logic */ });
+        Object.values(H).forEach(h=> { /* shown via logic */ });
 
         if(bad){ if(!firstError) firstError=bike_speed; missing.push("rower: prędkość"); }
         else {
@@ -613,9 +617,9 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if(bikeMode==="time"){
         bikeSec = parseTimeToSeconds(bike_time_manual.value);
         const bad = (bikeSec==null);
-        markNeed(bike_time_manual,bad); showHint(H.bike_time_manual, bad);
+        markNeed(bike_time_manual,bad);
+        showHint(H.bike_time_manual, bad && hasValue(bike_time_manual));
         markNeed(bike_speed,false); showHint(H.bike_speed,false);
-        // FTP fields not required here
         [ftp, IF, mass, bike_mass, grade, cda, crr, rho, wind, drivetrain].forEach(x=>markNeed(x,false));
 
         if(bad){ if(!firstError) firstError=bike_time_manual; missing.push("rower: czas"); }
@@ -651,14 +655,13 @@ document.addEventListener("DOMContentLoaded", () => {
         ];
         checks.forEach(([field,bad,hint,label])=>{
           markNeed(field,bad);
-          showHint(hint,bad);
+          showHint(hint, bad && hasValue(field));
           if(bad){
             if(!firstError) firstError=field;
             missing.push(label);
           }
         });
 
-        // not required in this mode
         markNeed(bike_speed,false); showHint(H.bike_speed,false);
         if(bike_time_manual){ markNeed(bike_time_manual,false); showHint(H.bike_time_manual,false); }
 
@@ -686,13 +689,15 @@ document.addEventListener("DOMContentLoaded", () => {
       if(runMode==="time"){
         runSec = parseTimeToSeconds(run_time.value);
         const bad = (runSec==null);
-        markNeed(run_time,bad); showHint(H.run_time,bad);
+        markNeed(run_time,bad);
+        showHint(H.run_time, bad && hasValue(run_time));
         markNeed(run_pace,false); showHint(H.run_pace,false);
         if(bad){ if(!firstError) firstError=run_time; missing.push("bieg: czas"); }
       } else {
         const pace = parseTimeToSeconds(run_pace.value);
         const bad = (pace==null);
-        markNeed(run_pace,bad); showHint(H.run_pace,bad);
+        markNeed(run_pace,bad);
+        showHint(H.run_pace, bad && hasValue(run_pace));
         markNeed(run_time,false); showHint(H.run_time,false);
         if(bad){ if(!firstError) firstError=run_pace; missing.push("bieg: tempo"); }
         else runSec = rK*pace;
@@ -708,13 +713,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const t2s = parseTimeToSeconds(t2.value);
 
     if(t1s==null){
-      markNeed(t1,true); showHint(H.t1,true);
+      markNeed(t1,true);
+      showHint(H.t1, hasValue(t1));  // show only if user typed something and it's wrong
       if(!firstError) firstError=t1;
       missing.push("T1");
     } else { markNeed(t1,false); showHint(H.t1,false); }
 
     if(t2s==null){
-      markNeed(t2,true); showHint(H.t2,true);
+      markNeed(t2,true);
+      showHint(H.t2, hasValue(t2));
       if(!firstError) firstError=t2;
       missing.push("T2");
     } else { markNeed(t2,false); showHint(H.t2,false); }
@@ -771,7 +778,6 @@ document.addEventListener("DOMContentLoaded", () => {
       what_total.textContent = "--:--:--";
       what_delta.textContent = "--";
 
-      // auto-scroll to first error
       scrollToFirstError(firstError || total_card);
     }
   }
