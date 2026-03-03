@@ -51,6 +51,31 @@
     }
     .hint.show { display:block; }
 
+    .actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .btn{
+      appearance:none; -webkit-appearance:none;
+      border:1px solid #d0d0d0;
+      background:#fff;
+      padding:10px 12px;
+      border-radius:10px;
+      font-size:16px;
+      font-weight:900;
+      cursor:pointer;
+      touch-action:manipulation;
+    }
+    .btn.primary{ border-color:#111; background:#111; color:#fff; }
+    .btn.danger{ border-color:#c40000; background:#fff; color:#c40000; }
+    .toast{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:10px;
+      font-weight:900;
+      display:none;
+    }
+    .toast.show{ display:block; }
+    .toast.ok{ background:#e8f7ee; color:#0a7d28; }
+    .toast.err{ background:#ffecec; color:#c40000; }
+
     @media(max-width:800px){ .grid, .grid3 { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -59,308 +84,318 @@
   <h1>Kalkulator czasu triathlon</h1>
   <div class="muted">Auto-przeliczanie. Presety uzupełniają dystanse. Total liczy się, gdy są: pływanie + rower + bieg + T1 + T2.</div>
 
-  <div class="card">
-    <label for="race">Dystans</label>
-    <select id="race">
-      <option value="Sprint">Sprint</option>
-      <option value="Olimpijski">Olimpijski</option>
-      <option value="1/8 IM">1/8 IM</option>
-      <option value="1/4 IM">1/4 IM</option>
-      <option value="1/2 IM" selected>1/2 IM</option>
-      <option value="Pełny (IM)">Pełny (IM)</option>
-      <option value="Własny">Własny</option>
-    </select>
+  <form id="appForm" autocomplete="off">
+    <div class="card">
+      <label for="race">Dystans</label>
+      <select id="race">
+        <option value="Sprint">Sprint</option>
+        <option value="Olimpijski">Olimpijski</option>
+        <option value="1/8 IM">1/8 IM</option>
+        <option value="1/4 IM">1/4 IM</option>
+        <option value="1/2 IM" selected>1/2 IM</option>
+        <option value="Pełny (IM)">Pełny (IM)</option>
+        <option value="Własny">Własny</option>
+      </select>
 
-    <div class="grid3" style="margin-top:12px">
-      <div>
-        <label for="swim_m">Pływanie (m)</label>
-        <input id="swim_m" inputmode="numeric">
+      <div class="grid3" style="margin-top:12px">
+        <div>
+          <label for="swim_m">Pływanie (m)</label>
+          <input id="swim_m" inputmode="numeric">
+        </div>
+        <div>
+          <label for="bike_km">Rower (km)</label>
+          <input id="bike_km" inputmode="decimal">
+        </div>
+        <div>
+          <label for="run_km">Bieg (km)</label>
+          <input id="run_km" inputmode="decimal">
+        </div>
       </div>
-      <div>
-        <label for="bike_km">Rower (km)</label>
-        <input id="bike_km" inputmode="decimal">
-      </div>
-      <div>
-        <label for="run_km">Bieg (km)</label>
-        <input id="run_km" inputmode="decimal">
-      </div>
-    </div>
-    <div class="muted" id="dist_hint" style="margin-top:8px"></div>
-  </div>
-
-  <div class="card">
-    <h3>Pływanie</h3>
-    <div class="seg" role="group" aria-label="Pływanie tryb">
-      <button id="swim_mode_pace" aria-pressed="true" type="button">Tempo</button>
-      <button id="swim_mode_time" aria-pressed="false" type="button">Czas</button>
+      <div class="muted" id="dist_hint" style="margin-top:8px"></div>
     </div>
 
-    <div class="grid" id="swim_block_pace">
-      <div>
-        <label for="swim_pace">Tempo (mm:ss /100m)</label>
-        <input id="swim_pace" placeholder="np. 2:10">
-        <div class="hint" id="hint_swim_pace">Użyj formatu mm:ss (np. 2:10).</div>
+    <div class="card">
+      <h3>Pływanie</h3>
+      <div class="seg" role="group" aria-label="Pływanie tryb">
+        <button id="swim_mode_pace" aria-pressed="true" type="button">Tempo</button>
+        <button id="swim_mode_time" aria-pressed="false" type="button">Czas</button>
       </div>
-      <div>
-        <label for="swim_time_calc" class="muted">Czas (wylicza się automatycznie)</label>
-        <input id="swim_time_calc" disabled>
+
+      <div class="grid" id="swim_block_pace">
+        <div>
+          <label for="swim_pace">Tempo (mm:ss /100m)</label>
+          <input id="swim_pace" placeholder="np. 2:10">
+          <div class="hint" id="hint_swim_pace">Użyj formatu mm:ss (np. 2:10).</div>
+        </div>
+        <div>
+          <label for="swim_time_calc" class="muted">Czas (wylicza się automatycznie)</label>
+          <input id="swim_time_calc" disabled>
+        </div>
       </div>
+
+      <div class="grid" id="swim_block_time" style="display:none">
+        <div>
+          <label for="swim_time">Czas (mm:ss lub hh:mm:ss)</label>
+          <input id="swim_time" placeholder="np. 32:00">
+          <div class="hint" id="hint_swim_time">Użyj formatu mm:ss lub hh:mm:ss (np. 32:00 albo 1:05:30).</div>
+        </div>
+        <div>
+          <label for="swim_pace_calc" class="muted">Tempo /100m (wylicza się automatycznie)</label>
+          <input id="swim_pace_calc" disabled>
+        </div>
+      </div>
+
+      <div class="out" id="out_swim">--:--:--</div>
     </div>
 
-    <div class="grid" id="swim_block_time" style="display:none">
-      <div>
-        <label for="swim_time">Czas (mm:ss lub hh:mm:ss)</label>
-        <input id="swim_time" placeholder="np. 32:00">
-        <div class="hint" id="hint_swim_time">Użyj formatu mm:ss lub hh:mm:ss (np. 32:00 albo 1:05:30).</div>
+    <div class="card">
+      <h3>Rower</h3>
+      <div class="seg" role="group" aria-label="Rower tryb">
+        <button id="bike_mode_speed" aria-pressed="true" type="button">Prędkość</button>
+        <button id="bike_mode_time" aria-pressed="false" type="button">Czas</button>
+        <button id="bike_mode_ftp" aria-pressed="false" type="button">FTP/IF</button>
       </div>
-      <div>
-        <label for="swim_pace_calc" class="muted">Tempo /100m (wylicza się automatycznie)</label>
-        <input id="swim_pace_calc" disabled>
+
+      <div class="grid" id="bike_block_speed">
+        <div>
+          <label for="bike_speed">Prędkość (km/h)</label>
+          <input id="bike_speed" inputmode="decimal" placeholder="np. 32">
+          <div class="hint" id="hint_bike_speed">Wpisz liczbę > 0 (np. 32).</div>
+        </div>
+        <div>
+          <label for="bike_time" class="muted">Czas (wylicza się automatycznie)</label>
+          <input id="bike_time" disabled>
+        </div>
       </div>
+
+      <div class="grid" id="bike_block_time" style="display:none">
+        <div>
+          <label for="bike_time_manual">Czas (mm:ss lub hh:mm:ss)</label>
+          <input id="bike_time_manual" placeholder="np. 3:00:00">
+          <div class="hint" id="hint_bike_time_manual">Użyj formatu mm:ss lub hh:mm:ss (np. 3:00:00).</div>
+        </div>
+        <div>
+          <label for="bike_speed_calc" class="muted">Prędkość (wylicza się automatycznie)</label>
+          <input id="bike_speed_calc" disabled>
+        </div>
+      </div>
+
+      <div id="bike_block_ftp" style="display:none">
+        <div class="grid">
+          <div>
+            <label for="ftp">FTP (W)</label>
+            <input id="ftp" inputmode="numeric" placeholder="np. 260">
+            <div class="hint" id="hint_ftp">Wpisz liczbę > 0 (np. 260).</div>
+          </div>
+          <div>
+            <label for="if_preset">IF (Intensity Factor)</label>
+            <select id="if_preset">
+              <option value="custom">Ręcznie</option>
+              <option value="safe">Bezpiecznie (0.75)</option>
+              <option value="half" selected>Standard 70.3 (0.80)</option>
+              <option value="aggro">Agresywnie (0.85)</option>
+              <option value="short">Sprint/Olimp (0.90)</option>
+            </select>
+            <div style="height:8px"></div>
+            <input id="if" inputmode="decimal" placeholder="np. 0.80">
+            <div class="hint" id="hint_if">Wpisz liczbę > 0 (np. 0.80).</div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="grid3">
+          <div>
+            <label for="mass">Masa zawodnika (kg)</label>
+            <input id="mass" inputmode="decimal" placeholder="np. 97">
+            <div class="hint" id="hint_mass">Wpisz liczbę > 0 (np. 97).</div>
+          </div>
+          <div>
+            <label for="bike_mass">Masa roweru+sprzętu (kg)</label>
+            <input id="bike_mass" inputmode="decimal" placeholder="np. 10">
+            <div class="hint" id="hint_bike_mass">Wpisz liczbę > 0 (np. 10).</div>
+          </div>
+          <div>
+            <label for="grade_preset">Nachylenie</label>
+            <select id="grade_preset">
+              <option value="custom">Ręcznie</option>
+              <option value="flat" selected>Płasko (0%)</option>
+              <option value="rolling">Pofałdowane (1%)</option>
+              <option value="hills">Górki (3%)</option>
+              <option value="down">Z górki (-1%)</option>
+            </select>
+            <div style="height:8px"></div>
+            <input id="grade" inputmode="decimal" placeholder="np. 0">
+            <div class="hint" id="hint_grade">Wpisz liczbę (może być ujemna, np. -1).</div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="grid3">
+          <div>
+            <label for="cda_preset">Pozycja / CdA</label>
+            <select id="cda_preset">
+              <option value="custom">Ręcznie</option>
+              <option value="aero">Aero (0.23)</option>
+              <option value="mid" selected>Średnio (0.26)</option>
+              <option value="comfort">Komfort (0.30)</option>
+            </select>
+            <div style="height:8px"></div>
+            <input id="cda" inputmode="decimal" placeholder="np. 0.26">
+            <div class="hint" id="hint_cda">Wpisz liczbę > 0 (np. 0.26).</div>
+          </div>
+
+          <div>
+            <label for="crr_preset">Nawierzchnia / Crr</label>
+            <select id="crr_preset">
+              <option value="custom">Ręcznie</option>
+              <option value="fast">Szybko (0.003)</option>
+              <option value="standard" selected>Standard (0.004)</option>
+              <option value="rough">Słabo (0.006)</option>
+            </select>
+            <div style="height:8px"></div>
+            <input id="crr" inputmode="decimal" placeholder="np. 0.004">
+            <div class="hint" id="hint_crr">Wpisz liczbę > 0 (np. 0.004).</div>
+          </div>
+
+          <div>
+            <label for="air_preset">Powietrze (ρ)</label>
+            <select id="air_preset">
+              <option value="custom">Ręcznie</option>
+              <option value="standard" selected>Standard (1.226)</option>
+              <option value="cold">Zimno (1.30)</option>
+              <option value="hot">Gorąco (1.15)</option>
+              <option value="high">Wysoko (1.06)</option>
+            </select>
+            <div style="height:8px"></div>
+            <input id="rho" inputmode="decimal" placeholder="np. 1.226">
+            <div class="hint" id="hint_rho">Wpisz liczbę > 0 (np. 1.226).</div>
+          </div>
+        </div>
+
+        <div class="grid" style="margin-top:12px">
+          <div>
+            <label for="wind_preset">Wiatr (m/s) (+ w twarz)</label>
+            <select id="wind_preset">
+              <option value="custom">Ręcznie</option>
+              <option value="calm" selected>Bez wiatru (0)</option>
+              <option value="breeze">Lekki (2)</option>
+              <option value="windy">Mocny (5)</option>
+              <option value="tail">Z tyłu (-2)</option>
+            </select>
+            <div style="height:8px"></div>
+            <input id="wind" inputmode="decimal" placeholder="np. 0">
+            <div class="hint" id="hint_wind">Wpisz liczbę (może być ujemna, np. -2).</div>
+          </div>
+
+          <div>
+            <label for="eta_preset">Sprawność napędu</label>
+            <select id="eta_preset">
+              <option value="custom">Ręcznie</option>
+              <option value="best">Bardzo dobra (0.98)</option>
+              <option value="good" selected>Dobra (0.97)</option>
+              <option value="ok">OK (0.95)</option>
+            </select>
+            <div style="height:8px"></div>
+            <input id="drivetrain" inputmode="decimal" placeholder="np. 0.97">
+            <div class="hint" id="hint_drivetrain">Wpisz liczbę z zakresu (0–1), np. 0.97.</div>
+          </div>
+        </div>
+
+        <div class="muted" style="margin-top:10px">
+          FTP/IF liczy rower niezależnie (nie musisz mieć wpisanego biegu/T1/T2, żeby zobaczyć czas roweru).
+        </div>
+      </div>
+
+      <div class="out" id="out_bike">--:--:--</div>
     </div>
 
-    <div class="out" id="out_swim">--:--:--</div>
-  </div>
+    <div class="card">
+      <h3>Bieg</h3>
+      <div class="seg" role="group" aria-label="Bieg tryb">
+        <button id="run_mode_pace" aria-pressed="true" type="button">Tempo</button>
+        <button id="run_mode_time" aria-pressed="false" type="button">Czas</button>
+      </div>
 
-  <div class="card">
-    <h3>Rower</h3>
-    <div class="seg" role="group" aria-label="Rower tryb">
-      <button id="bike_mode_speed" aria-pressed="true" type="button">Prędkość</button>
-      <button id="bike_mode_time" aria-pressed="false" type="button">Czas</button>
-      <button id="bike_mode_ftp" aria-pressed="false" type="button">FTP/IF</button>
+      <div class="grid" id="run_block_pace">
+        <div>
+          <label for="run_pace">Tempo (mm:ss /km)</label>
+          <input id="run_pace" placeholder="np. 6:30">
+          <div class="hint" id="hint_run_pace">Użyj formatu mm:ss (np. 6:30).</div>
+        </div>
+        <div>
+          <label for="run_time_calc" class="muted">Czas (wylicza się automatycznie)</label>
+          <input id="run_time_calc" disabled>
+        </div>
+      </div>
+
+      <div class="grid" id="run_block_time" style="display:none">
+        <div>
+          <label for="run_time">Czas (mm:ss lub hh:mm:ss)</label>
+          <input id="run_time" placeholder="np. 2:20:00">
+          <div class="hint" id="hint_run_time">Użyj formatu mm:ss lub hh:mm:ss (np. 2:20:00).</div>
+        </div>
+        <div>
+          <label for="run_pace_calc" class="muted">Tempo /km (wylicza się automatycznie)</label>
+          <input id="run_pace_calc" disabled>
+        </div>
+      </div>
+
+      <div class="out" id="out_run">--:--:--</div>
     </div>
 
-    <div class="grid" id="bike_block_speed">
-      <div>
-        <label for="bike_speed">Prędkość (km/h)</label>
-        <input id="bike_speed" inputmode="decimal" placeholder="np. 32">
-        <div class="hint" id="hint_bike_speed">Wpisz liczbę > 0 (np. 32).</div>
-      </div>
-      <div>
-        <label for="bike_time" class="muted">Czas (wylicza się automatycznie)</label>
-        <input id="bike_time" disabled>
-      </div>
-    </div>
-
-    <div class="grid" id="bike_block_time" style="display:none">
-      <div>
-        <label for="bike_time_manual">Czas (mm:ss lub hh:mm:ss)</label>
-        <input id="bike_time_manual" placeholder="np. 3:00:00">
-        <div class="hint" id="hint_bike_time_manual">Użyj formatu mm:ss lub hh:mm:ss (np. 3:00:00).</div>
-      </div>
-      <div>
-        <label for="bike_speed_calc" class="muted">Prędkość (wylicza się automatycznie)</label>
-        <input id="bike_speed_calc" disabled>
-      </div>
-    </div>
-
-    <div id="bike_block_ftp" style="display:none">
+    <div class="card">
+      <h3>Zmiany</h3>
       <div class="grid">
         <div>
-          <label for="ftp">FTP (W)</label>
-          <input id="ftp" inputmode="numeric" placeholder="np. 260">
-          <div class="hint" id="hint_ftp">Wpisz liczbę > 0 (np. 260).</div>
+          <label for="t1">T1 (mm:ss)</label>
+          <input id="t1" placeholder="np. 4:00">
+          <div class="hint" id="hint_t1">Użyj formatu mm:ss (np. 4:00).</div>
         </div>
         <div>
-          <label for="if_preset">IF (Intensity Factor)</label>
-          <select id="if_preset">
-            <option value="custom">Ręcznie</option>
-            <option value="safe">Bezpiecznie (0.75)</option>
-            <option value="half" selected>Standard 70.3 (0.80)</option>
-            <option value="aggro">Agresywnie (0.85)</option>
-            <option value="short">Sprint/Olimp (0.90)</option>
-          </select>
-          <div style="height:8px"></div>
-          <input id="if" inputmode="decimal" placeholder="np. 0.80">
-          <div class="hint" id="hint_if">Wpisz liczbę > 0 (np. 0.80).</div>
+          <label for="t2">T2 (mm:ss)</label>
+          <input id="t2" placeholder="np. 3:00">
+          <div class="hint" id="hint_t2">Użyj formatu mm:ss (np. 3:00).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="total_card">
+      <div class="actions" style="justify-content:space-between; align-items:center;">
+        <h3 style="margin:0">Czas łączny</h3>
+        <div class="actions">
+          <button type="button" class="btn danger" id="btnReset">Reset</button>
+          <button type="button" class="btn primary" id="btnCopy">Kopiuj podsumowanie</button>
         </div>
       </div>
 
-      <div class="hr"></div>
+      <div style="margin-top:10px" class="outbig" id="out_total">--:--:--</div>
+      <div id="status" class="error">Uzupełnij dane</div>
+      <div id="toast" class="toast"></div>
+    </div>
 
-      <div class="grid3">
-        <div>
-          <label for="mass">Masa zawodnika (kg)</label>
-          <input id="mass" inputmode="decimal" placeholder="np. 97">
-          <div class="hint" id="hint_mass">Wpisz liczbę > 0 (np. 97).</div>
-        </div>
-        <div>
-          <label for="bike_mass">Masa roweru+sprzętu (kg)</label>
-          <input id="bike_mass" inputmode="decimal" placeholder="np. 10">
-          <div class="hint" id="hint_bike_mass">Wpisz liczbę > 0 (np. 10).</div>
-        </div>
-        <div>
-          <label for="grade_preset">Nachylenie</label>
-          <select id="grade_preset">
-            <option value="custom">Ręcznie</option>
-            <option value="flat" selected>Płasko (0%)</option>
-            <option value="rolling">Pofałdowane (1%)</option>
-            <option value="hills">Górki (3%)</option>
-            <option value="down">Z górki (-1%)</option>
-          </select>
-          <div style="height:8px"></div>
-          <input id="grade" inputmode="decimal" placeholder="np. 0">
-          <div class="hint" id="hint_grade">Wpisz liczbę (może być ujemna, np. -1).</div>
-        </div>
-      </div>
+    <div class="card">
+      <h3>Symulacja „co jeśli” <span class="pill">delta</span></h3>
+      <div class="muted">Działa na bazowym totalu (gdy wszystko uzupełnione).</div>
 
-      <div class="hr"></div>
-
-      <div class="grid3">
-        <div>
-          <label for="cda_preset">Pozycja / CdA</label>
-          <select id="cda_preset">
-            <option value="custom">Ręcznie</option>
-            <option value="aero">Aero (0.23)</option>
-            <option value="mid" selected>Średnio (0.26)</option>
-            <option value="comfort">Komfort (0.30)</option>
-          </select>
-          <div style="height:8px"></div>
-          <input id="cda" inputmode="decimal" placeholder="np. 0.26">
-          <div class="hint" id="hint_cda">Wpisz liczbę > 0 (np. 0.26).</div>
-        </div>
-
-        <div>
-          <label for="crr_preset">Nawierzchnia / Crr</label>
-          <select id="crr_preset">
-            <option value="custom">Ręcznie</option>
-            <option value="fast">Szybko (0.003)</option>
-            <option value="standard" selected>Standard (0.004)</option>
-            <option value="rough">Słabo (0.006)</option>
-          </select>
-          <div style="height:8px"></div>
-          <input id="crr" inputmode="decimal" placeholder="np. 0.004">
-          <div class="hint" id="hint_crr">Wpisz liczbę > 0 (np. 0.004).</div>
-        </div>
-
-        <div>
-          <label for="air_preset">Powietrze (ρ)</label>
-          <select id="air_preset">
-            <option value="custom">Ręcznie</option>
-            <option value="standard" selected>Standard (1.226)</option>
-            <option value="cold">Zimno (1.30)</option>
-            <option value="hot">Gorąco (1.15)</option>
-            <option value="high">Wysoko (1.06)</option>
-          </select>
-          <div style="height:8px"></div>
-          <input id="rho" inputmode="decimal" placeholder="np. 1.226">
-          <div class="hint" id="hint_rho">Wpisz liczbę > 0 (np. 1.226).</div>
-        </div>
+      <div class="grid3" style="margin-top:12px">
+        <div><label for="d_swim">Pływanie (s / 100m)</label><input id="d_swim" inputmode="decimal" placeholder="np. -5"></div>
+        <div><label for="d_bike">Rower (km/h)</label><input id="d_bike" inputmode="decimal" placeholder="np. +1"></div>
+        <div><label for="d_run">Bieg (s / km)</label><input id="d_run" inputmode="decimal" placeholder="np. -10"></div>
       </div>
 
       <div class="grid" style="margin-top:12px">
-        <div>
-          <label for="wind_preset">Wiatr (m/s) (+ w twarz)</label>
-          <select id="wind_preset">
-            <option value="custom">Ręcznie</option>
-            <option value="calm" selected>Bez wiatru (0)</option>
-            <option value="breeze">Lekki (2)</option>
-            <option value="windy">Mocny (5)</option>
-            <option value="tail">Z tyłu (-2)</option>
-          </select>
-          <div style="height:8px"></div>
-          <input id="wind" inputmode="decimal" placeholder="np. 0">
-          <div class="hint" id="hint_wind">Wpisz liczbę (może być ujemna, np. -2).</div>
-        </div>
-
-        <div>
-          <label for="eta_preset">Sprawność napędu</label>
-          <select id="eta_preset">
-            <option value="custom">Ręcznie</option>
-            <option value="best">Bardzo dobra (0.98)</option>
-            <option value="good" selected>Dobra (0.97)</option>
-            <option value="ok">OK (0.95)</option>
-          </select>
-          <div style="height:8px"></div>
-          <input id="drivetrain" inputmode="decimal" placeholder="np. 0.97">
-          <div class="hint" id="hint_drivetrain">Wpisz liczbę z zakresu (0–1), np. 0.97.</div>
-        </div>
+        <div><label for="d_t1">T1 (s)</label><input id="d_t1" inputmode="numeric" placeholder="np. -15"></div>
+        <div><label for="d_t2">T2 (s)</label><input id="d_t2" inputmode="numeric" placeholder="np. -10"></div>
       </div>
 
-      <div class="muted" style="margin-top:10px">
-        FTP/IF liczy rower niezależnie (nie musisz mieć wpisanego biegu/T1/T2, żeby zobaczyć czas roweru).
+      <div class="out" style="margin-top:10px">
+        Nowy total: <span id="what_total">--:--:--</span><br/>
+        Różnica: <span id="what_delta">--</span>
       </div>
     </div>
-
-    <div class="out" id="out_bike">--:--:--</div>
-  </div>
-
-  <div class="card">
-    <h3>Bieg</h3>
-    <div class="seg" role="group" aria-label="Bieg tryb">
-      <button id="run_mode_pace" aria-pressed="true" type="button">Tempo</button>
-      <button id="run_mode_time" aria-pressed="false" type="button">Czas</button>
-    </div>
-
-    <div class="grid" id="run_block_pace">
-      <div>
-        <label for="run_pace">Tempo (mm:ss /km)</label>
-        <input id="run_pace" placeholder="np. 6:30">
-        <div class="hint" id="hint_run_pace">Użyj formatu mm:ss (np. 6:30).</div>
-      </div>
-      <div>
-        <label for="run_time_calc" class="muted">Czas (wylicza się automatycznie)</label>
-        <input id="run_time_calc" disabled>
-      </div>
-    </div>
-
-    <div class="grid" id="run_block_time" style="display:none">
-      <div>
-        <label for="run_time">Czas (mm:ss lub hh:mm:ss)</label>
-        <input id="run_time" placeholder="np. 2:20:00">
-        <div class="hint" id="hint_run_time">Użyj formatu mm:ss lub hh:mm:ss (np. 2:20:00).</div>
-      </div>
-      <div>
-        <label for="run_pace_calc" class="muted">Tempo /km (wylicza się automatycznie)</label>
-        <input id="run_pace_calc" disabled>
-      </div>
-    </div>
-
-    <div class="out" id="out_run">--:--:--</div>
-  </div>
-
-  <div class="card">
-    <h3>Zmiany</h3>
-    <div class="grid">
-      <div>
-        <label for="t1">T1 (mm:ss)</label>
-        <input id="t1" placeholder="np. 4:00">
-        <div class="hint" id="hint_t1">Użyj formatu mm:ss (np. 4:00).</div>
-      </div>
-      <div>
-        <label for="t2">T2 (mm:ss)</label>
-        <input id="t2" placeholder="np. 3:00">
-        <div class="hint" id="hint_t2">Użyj formatu mm:ss (np. 3:00).</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card" id="total_card">
-    <h3>Czas łączny</h3>
-    <div class="outbig" id="out_total">--:--:--</div>
-    <div id="status" class="error">Uzupełnij dane</div>
-  </div>
-
-  <div class="card">
-    <h3>Symulacja „co jeśli” <span class="pill">delta</span></h3>
-    <div class="muted">Działa na bazowym totalu (gdy wszystko uzupełnione).</div>
-
-    <div class="grid3" style="margin-top:12px">
-      <div><label for="d_swim">Pływanie (s / 100m)</label><input id="d_swim" inputmode="decimal" placeholder="np. -5"></div>
-      <div><label for="d_bike">Rower (km/h)</label><input id="d_bike" inputmode="decimal" placeholder="np. +1"></div>
-      <div><label for="d_run">Bieg (s / km)</label><input id="d_run" inputmode="decimal" placeholder="np. -10"></div>
-    </div>
-
-    <div class="grid" style="margin-top:12px">
-      <div><label for="d_t1">T1 (s)</label><input id="d_t1" inputmode="numeric" placeholder="np. -15"></div>
-      <div><label for="d_t2">T2 (s)</label><input id="d_t2" inputmode="numeric" placeholder="np. -10"></div>
-    </div>
-
-    <div class="out" style="margin-top:10px">
-      Nowy total: <span id="what_total">--:--:--</span><br/>
-      Różnica: <span id="what_delta">--</span>
-    </div>
-  </div>
+  </form>
 </div>
 
 <script>
@@ -374,6 +409,8 @@ document.addEventListener("DOMContentLoaded", () => {
     "Pełny (IM)": { swim:3800, bike:180, run:42.2 }
   };
   const el = (id) => document.getElementById(id);
+
+  const form = el("appForm");
 
   // Dist
   const race = el("race"), swim_m = el("swim_m"), bike_km = el("bike_km"), run_km = el("run_km"), dist_hint = el("dist_hint");
@@ -409,6 +446,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Total/status
   const out_total = el("out_total"), status = el("status");
+  const btnReset = el("btnReset"), btnCopy = el("btnCopy");
+  const toast = el("toast");
 
   // What-if
   const d_swim = el("d_swim"), d_bike = el("d_bike"), d_run = el("d_run"), d_t1 = el("d_t1"), d_t2 = el("d_t2");
@@ -445,8 +484,21 @@ document.addEventListener("DOMContentLoaded", () => {
   let bikeMode = "speed";
   let runMode  = "pace";
 
+  // last computed values for Copy
+  let last = {
+    swimSec: null, bikeSec: null, runSec: null, t1s: null, t2s: null, totalSec: null,
+    swimPace100: null, runPace: null, bikeSpeedKmh: null
+  };
+
   function setSeg(btnTrue, btnFalse){ btnTrue.setAttribute("aria-pressed","true"); btnFalse.setAttribute("aria-pressed","false"); }
   function setSeg3(a,b,c,val){ [a,b,c].forEach(x=>x.setAttribute("aria-pressed","false")); val.setAttribute("aria-pressed","true"); }
+
+  function toastMsg(text, ok=true){
+    toast.textContent = text;
+    toast.className = "toast show " + (ok ? "ok" : "err");
+    window.clearTimeout(toast._t);
+    toast._t = window.setTimeout(()=>{ toast.className = "toast"; }, 2200);
+  }
 
   swim_mode_pace.addEventListener("click", () => { swimMode="pace"; setSeg(swim_mode_pace, swim_mode_time); updateSwimBlocks(); calc(); });
   swim_mode_time.addEventListener("click", () => { swimMode="time"; setSeg(swim_mode_time, swim_mode_pace); updateSwimBlocks(); calc(); });
@@ -593,6 +645,9 @@ document.addEventListener("DOMContentLoaded", () => {
     clearNeed();
     const missing = [];
 
+    // reset last computed
+    last = { swimSec:null,bikeSec:null,runSec:null,t1s:null,t2s:null,totalSec:null,swimPace100:null,runPace:null,bikeSpeedKmh:null };
+
     const sM = parsePositive(swim_m.value);
     const bK = parsePositive(bike_km.value);
     const rK = parsePositive(run_km.value);
@@ -616,6 +671,7 @@ document.addEventListener("DOMContentLoaded", () => {
         else {
           swimSec = (Math.round(sM)/100.0)*pace100;
           swim_time_calc.value = fmt(swimSec);
+          last.swimPace100 = pace100;
         }
       } else {
         swimSec = parseTimeToSeconds(swim_time.value);
@@ -626,6 +682,7 @@ document.addEventListener("DOMContentLoaded", () => {
         else {
           const pace100 = swimSec / (Math.round(sM)/100.0);
           swim_pace_calc.value = fmtPace(pace100);
+          last.swimPace100 = pace100;
         }
       }
     }
@@ -641,6 +698,7 @@ document.addEventListener("DOMContentLoaded", () => {
         else {
           bikeSec = (bK/spd)*3600.0;
           bike_time.value = fmt(bikeSec);
+          last.bikeSpeedKmh = spd;
         }
       } else if(bikeMode==="time"){
         bikeSec = parseTimeToSeconds(bike_time_manual.value);
@@ -651,6 +709,7 @@ document.addEventListener("DOMContentLoaded", () => {
         else {
           const spd = (bK/(bikeSec/3600.0));
           bike_speed_calc.value = (Math.round(spd*10)/10).toString();
+          last.bikeSpeedKmh = spd;
         }
       } else {
         applyFtpPresets();
@@ -698,6 +757,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const spd_kmh = v_ms*3.6;
           bikeSec = (bK/spd_kmh)*3600.0;
           bike_time.value = fmt(bikeSec);
+          last.bikeSpeedKmh = spd_kmh;
         }
       }
     }
@@ -715,6 +775,7 @@ document.addEventListener("DOMContentLoaded", () => {
         else {
           runSec = rK*pace;
           run_time_calc.value = fmt(runSec);
+          last.runPace = pace;
         }
       } else {
         runSec = parseTimeToSeconds(run_time.value);
@@ -725,6 +786,7 @@ document.addEventListener("DOMContentLoaded", () => {
         else {
           const pace = runSec / rK;
           run_pace_calc.value = fmtPace(pace);
+          last.runPace = pace;
         }
       }
     }
@@ -748,8 +810,12 @@ document.addEventListener("DOMContentLoaded", () => {
       missing.push("T2");
     } else { markNeed(t2,false); showHint(H.t2,false); }
 
+    // store last partials
+    last.swimSec = swimSec; last.bikeSec = bikeSec; last.runSec = runSec; last.t1s = t1s; last.t2s = t2s;
+
     if(swimSec!=null && bikeSec!=null && runSec!=null && t1s!=null && t2s!=null){
       const totalSec = swimSec+bikeSec+runSec+t1s+t2s;
+      last.totalSec = totalSec;
       out_total.textContent = fmt(totalSec);
       status.textContent = "OK — policzone.";
       status.className = "ok";
@@ -813,6 +879,80 @@ document.addEventListener("DOMContentLoaded", () => {
       x.addEventListener("change", calc);
     });
   }
+
+  function resetAll(){
+    // 1) reset native form values (selects to default, inputs to empty)
+    form.reset();
+
+    // 2) reset modes to default (to avoid UI mismatch)
+    swimMode = "pace"; setSeg(swim_mode_pace, swim_mode_time);
+    bikeMode = "speed"; setSeg3(bike_mode_speed,bike_mode_time,bike_mode_ftp,bike_mode_speed);
+    runMode  = "pace"; setSeg(run_mode_pace, run_mode_time);
+
+    // 3) update blocks + presets/distances
+    updateSwimBlocks();
+    updateBikeBlocks();
+    updateRunBlocks();
+    applyRacePreset();      // fills distances for default race
+    applyFtpPresets();
+
+    // 4) clear computed fields explicitly
+    swim_time_calc.value = "";
+    swim_pace_calc.value = "";
+    bike_time.value = "";
+    bike_speed_calc.value = "";
+    run_time_calc.value = "";
+    run_pace_calc.value = "";
+
+    // 5) clear validation UI + outputs
+    clearNeed();
+    out_swim.textContent = "--:--:--";
+    out_bike.textContent = "--:--:--";
+    out_run.textContent  = "--:--:--";
+    out_total.textContent = "--:--:--";
+    status.textContent = "Uzupełnij dane";
+    status.className = "error";
+    what_total.textContent = "--:--:--";
+    what_delta.textContent = "--";
+
+    last = { swimSec:null,bikeSec:null,runSec:null,t1s:null,t2s:null,totalSec:null,swimPace100:null,runPace:null,bikeSpeedKmh:null };
+
+    toastMsg("Zresetowano ✅", true);
+  }
+
+  async function copySummary(){
+    if(last.totalSec == null){
+      toastMsg("Najpierw uzupełnij dane, żeby policzyć total.", false);
+      return;
+    }
+
+    const sM = parsePositive(swim_m.value);
+    const bK = parsePositive(bike_km.value);
+    const rK = parsePositive(run_km.value);
+
+    const distLine = `${race.value} | Swim ${sM ?? "?"}m | Bike ${bK ?? "?"}km | Run ${rK ?? "?"}km`;
+
+    const swimInfo = `Swim ${fmt(last.swimSec)} (${last.swimPace100!=null ? fmtPace(last.swimPace100)+"/100m" : "tempo ?"})`;
+    const bikeInfo = `Bike ${fmt(last.bikeSec)} (${last.bikeSpeedKmh!=null ? (Math.round(last.bikeSpeedKmh*10)/10)+" km/h" : "v ?"})`;
+    const runInfo  = `Run ${fmt(last.runSec)} (${last.runPace!=null ? fmtPace(last.runPace)+"/km" : "tempo ?"})`;
+    const tInfo    = `T1 ${fmt(last.t1s)} | T2 ${fmt(last.t2s)}`;
+    const totalInfo= `TOTAL ${fmt(last.totalSec)}`;
+
+    const text = `${distLine}\n${swimInfo}\n${bikeInfo}\n${runInfo}\n${tInfo}\n${totalInfo}`;
+
+    try{
+      await navigator.clipboard.writeText(text);
+      toastMsg("Skopiowano do schowka ✅", true);
+    } catch(e){
+      // fallback (iOS bywa kapryśny)
+      const ok = window.prompt("Skopiuj ręcznie:", text);
+      if(ok !== null) toastMsg("Podsumowanie wyświetlone do skopiowania ✅", true);
+      else toastMsg("Nie udało się skopiować.", false);
+    }
+  }
+
+  btnReset.addEventListener("click", resetAll);
+  btnCopy.addEventListener("click", copySummary);
 
   function init(){
     applyRacePreset();
