@@ -76,17 +76,14 @@
       <div>
         <label for="swim_m">Pływanie (m)</label>
         <input id="swim_m" inputmode="numeric">
-        <div class="hint" id="hint_swim_m"></div>
       </div>
       <div>
         <label for="bike_km">Rower (km)</label>
         <input id="bike_km" inputmode="decimal">
-        <div class="hint" id="hint_bike_km"></div>
       </div>
       <div>
         <label for="run_km">Bieg (km)</label>
         <input id="run_km" inputmode="decimal">
-        <div class="hint" id="hint_run_km"></div>
       </div>
     </div>
     <div class="muted" id="dist_hint" style="margin-top:8px"></div>
@@ -130,7 +127,6 @@
       <div>
         <label for="bike_time" class="muted">Czas (wylicza się automatycznie)</label>
         <input id="bike_time" disabled>
-        <div class="hint" id="hint_bike_time"></div>
       </div>
     </div>
 
@@ -143,7 +139,6 @@
       <div>
         <label for="bike_speed_calc" class="muted">Prędkość (wylicza się automatycznie)</label>
         <input id="bike_speed_calc" disabled>
-        <div class="hint" id="hint_bike_speed_calc"></div>
       </div>
     </div>
 
@@ -508,16 +503,23 @@ document.addEventListener("DOMContentLoaded", () => {
   function showHint(hintEl, on){ if(!hintEl) return; hintEl.classList.toggle("show", !!on); }
   function markNeed(elem, bad){ if(!elem) return; elem.classList.toggle("need", !!bad); }
 
-  // smooth scroll to first missing field (throttled)
+  // smooth scroll to first missing field (throttled + "after typing")
   let lastScrollAt = 0;
+  let lastInputAt = 0;
+
   function scrollToFirstError(firstElem){
     if(!firstElem) return;
     const now = Date.now();
-    if(now - lastScrollAt < 900) return;
+
+    // don't scroll while user is actively typing
+    if(now - lastInputAt < 700) return;
+
+    // throttle scrolling
+    if(now - lastScrollAt < 1200) return;
     lastScrollAt = now;
 
+    // scroll only (NO focus!)
     firstElem.scrollIntoView({ behavior:"smooth", block:"center" });
-    try { firstElem.focus({ preventScroll:true }); } catch(e) {}
   }
 
   function applyRacePreset(){
@@ -607,7 +609,6 @@ document.addEventListener("DOMContentLoaded", () => {
         showHint(H.bike_speed, bad && hasValue(bike_speed));
         if(bike_time_manual){ markNeed(bike_time_manual,false); showHint(H.bike_time_manual,false); }
         [ftp, IF, mass, bike_mass, grade, cda, crr, rho, wind, drivetrain].forEach(x=>markNeed(x,false));
-        Object.values(H).forEach(h=> { /* shown via logic */ });
 
         if(bad){ if(!firstError) firstError=bike_speed; missing.push("rower: prędkość"); }
         else {
@@ -714,7 +715,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if(t1s==null){
       markNeed(t1,true);
-      showHint(H.t1, hasValue(t1));  // show only if user typed something and it's wrong
+      showHint(H.t1, hasValue(t1));
       if(!firstError) firstError=t1;
       missing.push("T1");
     } else { markNeed(t1,false); showHint(H.t1,false); }
@@ -783,16 +784,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function hookInputs(){
-    race.addEventListener("change", () => { applyRacePreset(); calc(); });
+    race.addEventListener("change", () => { lastInputAt = Date.now(); applyRacePreset(); calc(); });
 
     [if_preset, grade_preset, cda_preset, crr_preset, air_preset, wind_preset, eta_preset].forEach(sel=>{
       if(!sel) return;
-      sel.addEventListener("change", () => { applyFtpPresets(); calc(); });
+      sel.addEventListener("change", () => { lastInputAt = Date.now(); applyFtpPresets(); calc(); });
     });
 
     document.querySelectorAll("input, select").forEach(x=>{
-      x.addEventListener("input", calc);
-      x.addEventListener("change", calc);
+      x.addEventListener("input", () => { lastInputAt = Date.now(); calc(); });
+      x.addEventListener("change", () => { lastInputAt = Date.now(); calc(); });
     });
   }
 
