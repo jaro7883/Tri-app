@@ -5,25 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Kalkulator czasu triathlon</title>
   <style>
-    body { font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 16px; background:#f8f9fb;}
-    .wrap { max-width: 900px; margin: 0 auto; }
-    h1 { font-size: 22px; margin: 0 0 10px; }
-    h3 { margin: 0 0 8px; }
-    .card { background:white; border-radius:12px; padding:16px; margin:12px 0; box-shadow:0 2px 6px rgba(0,0,0,0.08);}
+    body { font-family:-apple-system,system-ui,Segoe UI,Roboto,Arial,sans-serif; margin:16px; background:#f8f9fb;}
+    .wrap { max-width:900px; margin:0 auto; }
+    h1 { font-size:22px; margin:0 0 10px; }
+    h3 { margin:0 0 8px; }
+    .card { background:#fff; border-radius:12px; padding:16px; margin:12px 0; box-shadow:0 2px 6px rgba(0,0,0,.08); }
     .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
-    label { font-weight:600; font-size:14px; display:block; margin-bottom:6px; }
+    label { font-weight:700; font-size:14px; display:block; margin-bottom:6px; }
     input, select { width:100%; padding:10px; font-size:16px; border-radius:8px; border:1px solid #ccc; }
     input:disabled { background:#f4f4f4; }
     .muted { color:#666; font-size:12px; }
-    .out { font-family: ui-monospace, Menlo, Consolas, monospace; font-size:18px; font-weight:900; margin-top:8px; }
-    .outbig { font-family: ui-monospace, Menlo, Consolas, monospace; font-size:22px; font-weight:900; }
-    .error { color:#c40000; font-weight:800; }
-    .ok { color:#0a7d28; font-weight:800; }
+    .out { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:18px; font-weight:900; margin-top:8px; }
+    .outbig { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:22px; font-weight:900; }
+    .error { color:#c40000; font-weight:900; }
+    .ok { color:#0a7d28; font-weight:900; }
     .hr { height:1px; background:#eee; margin:12px 0; }
-    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#f0f2f6; font-size:12px; font-weight:700; color:#333; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#f0f2f6; font-size:12px; font-weight:800; color:#333; }
 
-    /* iOS-friendly segmented toggles */
+    /* iOS-friendly segmented buttons */
     .seg { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 6px; }
     .seg button{
       appearance:none; -webkit-appearance:none;
@@ -32,8 +32,9 @@
       padding:10px 12px;
       border-radius:10px;
       font-size:16px;
-      font-weight:800;
+      font-weight:900;
       cursor:pointer;
+      touch-action:manipulation;
     }
     .seg button[aria-pressed="true"]{ border-color:#111; background:#111; color:#fff; }
 
@@ -87,12 +88,12 @@
 
     <div class="grid" id="bike_block_speed">
       <div><label for="bike_speed">Prędkość (km/h)</label><input id="bike_speed" inputmode="decimal" placeholder="np. 32"></div>
-      <div><label for="bike_time" class="muted">Czas (wylicza się automatycznie)</label><input id="bike_time" placeholder="np. 3:00:00" disabled></div>
+      <div><label for="bike_time" class="muted">Czas (wylicza się automatycznie)</label><input id="bike_time" disabled></div>
     </div>
 
     <div class="grid" id="bike_block_time" style="display:none">
       <div><label for="bike_time_manual">Czas (mm:ss lub hh:mm:ss)</label><input id="bike_time_manual" placeholder="np. 3:00:00"></div>
-      <div><label for="bike_speed_calc" class="muted">Prędkość (wylicza się automatycznie)</label><input id="bike_speed_calc" placeholder="np. 32" disabled></div>
+      <div><label for="bike_speed_calc" class="muted">Prędkość (wylicza się automatycznie)</label><input id="bike_speed_calc" disabled></div>
     </div>
 
     <div id="bike_block_ftp" style="display:none">
@@ -101,7 +102,6 @@
           <label for="ftp">FTP (W)</label>
           <input id="ftp" inputmode="numeric" placeholder="np. 260">
         </div>
-
         <div>
           <label for="if_preset">IF (Intensity Factor)</label>
           <select id="if_preset">
@@ -204,7 +204,7 @@
       </div>
 
       <div class="muted" style="margin-top:10px">
-        Model jest uproszczony (fizyka jazdy). Świetny do „co jeśli” (aero vs komfort, wiatr, nawierzchnia, górki).
+        FTP/IF liczy rower niezależnie (nie musisz mieć wpisanego biegu/T1/T2, żeby zobaczyć czas roweru).
       </div>
     </div>
 
@@ -240,7 +240,7 @@
 
   <div class="card">
     <h3>Symulacja „co jeśli” <span class="pill">delta</span></h3>
-    <div class="muted">Wpisz zmiany i zobacz różnicę całkowitego czasu (np. -5s/100m, +1 km/h, -10s/km).</div>
+    <div class="muted">Działa na bazowym totalu (gdy wszystko uzupełnione).</div>
 
     <div class="grid3" style="margin-top:12px">
       <div><label for="d_swim">Pływanie (s / 100m)</label><input id="d_swim" inputmode="decimal" placeholder="np. -5"></div>
@@ -269,102 +269,59 @@ document.addEventListener("DOMContentLoaded", () => {
     "1/2 IM": { swim:1900, bike:90, run:21.1 },
     "Pełny (IM)": { swim:3800, bike:180, run:42.2 }
   };
-
   const el = (id) => document.getElementById(id);
 
   // Dist
-  const race = el("race");
-  const swim_m = el("swim_m");
-  const bike_km = el("bike_km");
-  const run_km = el("run_km");
-  const dist_hint = el("dist_hint");
+  const race = el("race"), swim_m = el("swim_m"), bike_km = el("bike_km"), run_km = el("run_km"), dist_hint = el("dist_hint");
 
   // Swim
-  const swim_pace = el("swim_pace");
-  const swim_time = el("swim_time");
-  const out_swim = el("out_swim");
+  const swim_pace = el("swim_pace"), swim_time = el("swim_time"), out_swim = el("out_swim");
 
   // Bike
-  const bike_speed = el("bike_speed");
-  const bike_time = el("bike_time");
-  const bike_time_manual = el("bike_time_manual");
-  const bike_speed_calc = el("bike_speed_calc");
-  const out_bike = el("out_bike");
-  const bike_block_speed = el("bike_block_speed");
-  const bike_block_time = el("bike_block_time");
-  const bike_block_ftp = el("bike_block_ftp");
+  const bike_speed = el("bike_speed"), bike_time = el("bike_time"), bike_time_manual = el("bike_time_manual"), bike_speed_calc = el("bike_speed_calc"),
+        out_bike = el("out_bike"), bike_block_speed = el("bike_block_speed"), bike_block_time = el("bike_block_time"), bike_block_ftp = el("bike_block_ftp");
 
   // FTP inputs
-  const ftp = el("ftp");
-  const if_preset = el("if_preset");
-  const IF = el("if");
-
-  const mass = el("mass");
-  const bike_mass = el("bike_mass");
-
-  const grade_preset = el("grade_preset");
-  const grade = el("grade");
-
-  const cda_preset = el("cda_preset");
-  const cda = el("cda");
-
-  const crr_preset = el("crr_preset");
-  const crr = el("crr");
-
-  const air_preset = el("air_preset");
-  const rho = el("rho");
-
-  const wind_preset = el("wind_preset");
-  const wind = el("wind");
-
-  const eta_preset = el("eta_preset");
-  const drivetrain = el("drivetrain");
+  const ftp = el("ftp"), if_preset = el("if_preset"), IF = el("if");
+  const mass = el("mass"), bike_mass = el("bike_mass");
+  const grade_preset = el("grade_preset"), grade = el("grade");
+  const cda_preset = el("cda_preset"), cda = el("cda");
+  const crr_preset = el("crr_preset"), crr = el("crr");
+  const air_preset = el("air_preset"), rho = el("rho");
+  const wind_preset = el("wind_preset"), wind = el("wind");
+  const eta_preset = el("eta_preset"), drivetrain = el("drivetrain");
 
   // Run
-  const run_pace = el("run_pace");
-  const run_time = el("run_time");
-  const out_run = el("out_run");
+  const run_pace = el("run_pace"), run_time = el("run_time"), out_run = el("out_run");
 
   // T
   const t1 = el("t1"), t2 = el("t2");
 
-  // Total
-  const out_total = el("out_total");
-  const status = el("status");
+  // Total/status
+  const out_total = el("out_total"), status = el("status");
 
   // What-if
   const d_swim = el("d_swim"), d_bike = el("d_bike"), d_run = el("d_run"), d_t1 = el("d_t1"), d_t2 = el("d_t2");
   const what_total = el("what_total"), what_delta = el("what_delta");
 
-  // Modes
-  let swimMode = "pace"; // pace | time
-  let bikeMode = "speed"; // speed | time | ftp
-  let runMode  = "pace"; // pace | time
-
   // Seg buttons
-  const swim_mode_pace = el("swim_mode_pace");
-  const swim_mode_time = el("swim_mode_time");
-  const bike_mode_speed = el("bike_mode_speed");
-  const bike_mode_time  = el("bike_mode_time");
-  const bike_mode_ftp   = el("bike_mode_ftp");
-  const run_mode_pace = el("run_mode_pace");
-  const run_mode_time = el("run_mode_time");
+  const swim_mode_pace = el("swim_mode_pace"), swim_mode_time = el("swim_mode_time");
+  const bike_mode_speed = el("bike_mode_speed"), bike_mode_time = el("bike_mode_time"), bike_mode_ftp = el("bike_mode_ftp");
+  const run_mode_pace = el("run_mode_pace"), run_mode_time = el("run_mode_time");
 
-  function setSeg(btnTrue, btnFalse){
-    btnTrue.setAttribute("aria-pressed", "true");
-    btnFalse.setAttribute("aria-pressed", "false");
-  }
-  function setSeg3(a, b, c, val){
-    [a,b,c].forEach(x => x.setAttribute("aria-pressed", "false"));
-    val.setAttribute("aria-pressed", "true");
-  }
+  let swimMode = "pace";
+  let bikeMode = "speed";
+  let runMode  = "pace";
+
+  function setSeg(btnTrue, btnFalse){ btnTrue.setAttribute("aria-pressed","true"); btnFalse.setAttribute("aria-pressed","false"); }
+  function setSeg3(a,b,c,val){ [a,b,c].forEach(x=>x.setAttribute("aria-pressed","false")); val.setAttribute("aria-pressed","true"); }
 
   swim_mode_pace.addEventListener("click", () => { swimMode="pace"; setSeg(swim_mode_pace, swim_mode_time); calc(); });
   swim_mode_time.addEventListener("click", () => { swimMode="time"; setSeg(swim_mode_time, swim_mode_pace); calc(); });
 
-  bike_mode_speed.addEventListener("click", () => { bikeMode="speed"; setSeg3(bike_mode_speed, bike_mode_time, bike_mode_ftp, bike_mode_speed); updateBikeBlocks(); calc(); });
-  bike_mode_time.addEventListener("click",  () => { bikeMode="time";  setSeg3(bike_mode_speed, bike_mode_time, bike_mode_ftp, bike_mode_time);  updateBikeBlocks(); calc(); });
-  bike_mode_ftp.addEventListener("click",   () => { bikeMode="ftp";   setSeg3(bike_mode_speed, bike_mode_time, bike_mode_ftp, bike_mode_ftp);   updateBikeBlocks(); applyFtpPresets(); calc(); });
+  bike_mode_speed.addEventListener("click", () => { bikeMode="speed"; setSeg3(bike_mode_speed,bike_mode_time,bike_mode_ftp,bike_mode_speed); updateBikeBlocks(); calc(); });
+  bike_mode_time .addEventListener("click", () => { bikeMode="time";  setSeg3(bike_mode_speed,bike_mode_time,bike_mode_ftp,bike_mode_time ); updateBikeBlocks(); calc(); });
+  bike_mode_ftp  .addEventListener("click", () => { bikeMode="ftp";   setSeg3(bike_mode_speed,bike_mode_time,bike_mode_ftp,bike_mode_ftp  ); updateBikeBlocks(); applyFtpPresets(); calc(); });
 
   run_mode_pace.addEventListener("click", () => { runMode="pace"; setSeg(run_mode_pace, run_mode_time); calc(); });
   run_mode_time.addEventListener("click", () => { runMode="time"; setSeg(run_mode_time, run_mode_pace); calc(); });
@@ -373,21 +330,19 @@ document.addEventListener("DOMContentLoaded", () => {
     bike_block_speed.style.display = (bikeMode==="speed") ? "" : "none";
     bike_block_time.style.display  = (bikeMode==="time")  ? "" : "none";
     bike_block_ftp.style.display   = (bikeMode==="ftp")   ? "" : "none";
-
     bike_speed.disabled = (bikeMode!=="speed");
     bike_time.disabled = true;
     if (bike_time_manual) bike_time_manual.disabled = (bikeMode!=="time");
   }
 
-  // Preset values
   const PRESET_VALS = {
-    grade: { flat: 0, rolling: 1, hills: 3, down: -1 },
-    cda:   { aero: 0.23, mid: 0.26, comfort: 0.30 },
-    crr:   { fast: 0.003, standard: 0.004, rough: 0.006 },
-    air:   { standard: 1.226, cold: 1.30, hot: 1.15, high: 1.06 },
-    wind:  { calm: 0, breeze: 2, windy: 5, tail: -2 },
-    eta:   { best: 0.98, good: 0.97, ok: 0.95 },
-    IF:    { safe: 0.75, half: 0.80, aggro: 0.85, short: 0.90 }
+    grade: { flat:0, rolling:1, hills:3, down:-1 },
+    cda:   { aero:0.23, mid:0.26, comfort:0.30 },
+    crr:   { fast:0.003, standard:0.004, rough:0.006 },
+    air:   { standard:1.226, cold:1.30, hot:1.15, high:1.06 },
+    wind:  { calm:0, breeze:2, windy:5, tail:-2 },
+    eta:   { best:0.98, good:0.97, ok:0.95 },
+    IF:    { safe:0.75, half:0.80, aggro:0.85, short:0.90 }
   };
 
   function applyFtpPresets(){
@@ -414,4 +369,258 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   function parseTimeToSeconds(v){
     v = (v ?? "").toString().trim();
-    if(!
+    if(!v) return null;
+    const parts = v.split(":").map(x=>x.trim());
+    if(parts.some(p=>p==="")) return null;
+    if(parts.length===2){
+      const mm = Number(parts[0]), ss = Number(parts[1]);
+      if(!Number.isInteger(mm) || !Number.isInteger(ss) || mm<0 || ss<0 || ss>=60) return null;
+      return mm*60 + ss;
+    }
+    if(parts.length===3){
+      const hh = Number(parts[0]), mm = Number(parts[1]), ss = Number(parts[2]);
+      if(!Number.isInteger(hh) || !Number.isInteger(mm) || !Number.isInteger(ss) || hh<0 || mm<0 || ss<0 || mm>=60 || ss>=60) return null;
+      return hh*3600 + mm*60 + ss;
+    }
+    return null;
+  }
+  function fmt(sec){
+    if(sec==null) return "--:--:--";
+    sec = Math.max(0, Math.round(sec));
+    const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60;
+    return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+  }
+
+  function applyRacePreset(){
+    const val = race.value;
+    const isCustom = (val === "Własny");
+    swim_m.disabled = !isCustom; bike_km.disabled = !isCustom; run_km.disabled = !isCustom;
+    swim_m.style.opacity = isCustom ? "1" : "0.7";
+    bike_km.style.opacity = isCustom ? "1" : "0.7";
+    run_km.style.opacity  = isCustom ? "1" : "0.7";
+    if(!isCustom && PRESETS[val]){
+      swim_m.value = String(PRESETS[val].swim);
+      bike_km.value = String(PRESETS[val].bike);
+      run_km.value  = String(PRESETS[val].run);
+      dist_hint.textContent = "Preset: dystanse ustawione automatycznie.";
+    } else {
+      dist_hint.textContent = "Własny: wpisz dystanse ręcznie.";
+    }
+  }
+
+  function estimateSpeedFromPower(P_watts, params){
+    const g = 9.80665;
+    const m = params.mass_total;
+    const gradeDec = params.grade;
+    const Crr = params.crr;
+    const CdA = params.cda;
+    const rhoV = params.rho;
+    const windV = params.wind;
+    const eta = params.eta;
+
+    const theta = Math.atan(gradeDec);
+    const F_roll = Crr * m * g * Math.cos(theta);
+    const F_grav = m * g * Math.sin(theta);
+
+    let lo=0.1, hi=25.0; // m/s
+    for(let i=0;i<60;i++){
+      const v=(lo+hi)/2;
+      const v_air=v+windV;
+      const F_aero=0.5*rhoV*CdA*v_air*v_air;
+      const P_need=(F_roll+F_grav+F_aero)*v/Math.max(eta,0.01);
+      if(P_need>P_watts) hi=v; else lo=v;
+    }
+    return lo;
+  }
+
+  function calc(){
+    const missing = [];
+
+    const sM = parsePositive(swim_m.value);
+    const bK = parsePositive(bike_km.value);
+    const rK = parsePositive(run_km.value);
+
+    if(sM==null) missing.push("dystans pływania");
+    if(bK==null) missing.push("dystans roweru");
+    if(rK==null) missing.push("dystans biegu");
+
+    let swimSec=null, bikeSec=null, runSec=null;
+
+    // SWIM
+    if(sM!=null){
+      if(swimMode==="time"){
+        swimSec = parseTimeToSeconds(swim_time.value);
+        if(swimSec==null) missing.push("pływanie: czas");
+      } else {
+        const pace100 = parseTimeToSeconds(swim_pace.value);
+        if(pace100==null) missing.push("pływanie: tempo");
+        else swimSec = (Math.round(sM)/100.0)*pace100;
+      }
+    }
+
+    // BIKE
+    if(bK!=null){
+      if(bikeMode==="speed"){
+        const spd = parsePositive(bike_speed.value);
+        if(spd==null) missing.push("rower: prędkość");
+        else {
+          bikeSec = (bK/spd)*3600.0;
+          bike_time.value = fmt(bikeSec);
+        }
+      } else if(bikeMode==="time"){
+        bikeSec = parseTimeToSeconds(bike_time_manual.value);
+        if(bikeSec==null) missing.push("rower: czas");
+        else {
+          const spd = (bK/(bikeSec/3600.0));
+          bike_speed_calc.value = (Math.round(spd*10)/10).toString();
+        }
+      } else { // FTP/IF (liczy niezależnie)
+        applyFtpPresets();
+
+        const ftpV = parsePositive(ftp.value);
+        const ifV  = parsePositive(IF.value);
+        const mV   = parsePositive(mass.value);
+        const bmV  = parsePositive(bike_mass.value);
+        const gradeV = parseNumber(grade.value);
+        const cdaV = parsePositive(cda.value);
+        const crrV = parsePositive(crr.value);
+        const rhoV = parsePositive(rho.value);
+        const windV = parseNumber(wind.value);
+        const etaV = parsePositive(drivetrain.value);
+
+        // braki tylko do samego roweru (żeby wyświetlał czas roweru nawet bez biegu/T1/T2)
+        const bikeReady =
+          ftpV!=null && ifV!=null && mV!=null && bmV!=null &&
+          gradeV!=null && cdaV!=null && crrV!=null && rhoV!=null &&
+          windV!=null && etaV!=null;
+
+        if(bikeReady){
+          const P = ftpV*ifV;
+          const v_ms = estimateSpeedFromPower(P, {
+            mass_total: mV+bmV,
+            grade: gradeV/100.0,
+            crr: crrV,
+            cda: cdaV,
+            rho: rhoV,
+            wind: windV,
+            eta: etaV
+          });
+          const spd_kmh = v_ms*3.6;
+          bikeSec = (bK/spd_kmh)*3600.0;
+          bike_time.value = fmt(bikeSec);
+        } else {
+          // ale do TOTALa nadal pokażemy co brakuje
+          if(ftpV==null) missing.push("FTP");
+          if(ifV==null) missing.push("IF");
+          if(mV==null) missing.push("masa");
+          if(bmV==null) missing.push("masa roweru");
+          if(gradeV==null) missing.push("nachylenie");
+          if(cdaV==null) missing.push("CdA");
+          if(crrV==null) missing.push("Crr");
+          if(rhoV==null) missing.push("ρ");
+          if(windV==null) missing.push("wiatr");
+          if(etaV==null) missing.push("sprawność napędu");
+        }
+      }
+    }
+
+    // RUN
+    if(rK!=null){
+      if(runMode==="time"){
+        runSec = parseTimeToSeconds(run_time.value);
+        if(runSec==null) missing.push("bieg: czas");
+      } else {
+        const pace = parseTimeToSeconds(run_pace.value);
+        if(pace==null) missing.push("bieg: tempo");
+        else runSec = rK*pace;
+      }
+    }
+
+    out_swim.textContent = fmt(swimSec);
+    out_bike.textContent = fmt(bikeSec);
+    out_run.textContent  = fmt(runSec);
+
+    // transitions for TOTAL
+    const t1s = parseTimeToSeconds(t1.value);
+    const t2s = parseTimeToSeconds(t2.value);
+    if(t1s==null) missing.push("T1");
+    if(t2s==null) missing.push("T2");
+
+    // TOTAL only if all 5 pieces exist
+    if(swimSec!=null && bikeSec!=null && runSec!=null && t1s!=null && t2s!=null){
+      const totalSec = swimSec+bikeSec+runSec+t1s+t2s;
+      out_total.textContent = fmt(totalSec);
+      status.textContent = "OK — policzone.";
+      status.className = "ok";
+
+      // What-if (simple)
+      const dSw = parseNumber(d_swim.value) ?? 0;
+      const dBk = parseNumber(d_bike.value) ?? 0;
+      const dRn = parseNumber(d_run.value) ?? 0;
+      const dT1 = parseNumber(d_t1.value) ?? 0;
+      const dT2 = parseNumber(d_t2.value) ?? 0;
+
+      let swim2 = swimSec;
+      if(swimMode==="pace"){
+        const pace100 = parseTimeToSeconds(swim_pace.value);
+        if(pace100!=null){
+          const pace2 = Math.max(1, pace100 + dSw);
+          swim2 = (Math.round(sM)/100.0)*pace2;
+        }
+      }
+
+      let bike2 = bikeSec;
+      if(bikeMode==="speed"){
+        const spd = parsePositive(bike_speed.value);
+        if(spd!=null){
+          const spd2 = Math.max(0.1, spd + dBk);
+          bike2 = (bK/spd2)*3600.0;
+        }
+      }
+
+      let run2 = runSec;
+      if(runMode==="pace"){
+        const pace = parseTimeToSeconds(run_pace.value);
+        if(pace!=null){
+          const pace2 = Math.max(1, pace + dRn);
+          run2 = rK*pace2;
+        }
+      }
+
+      const total2 = swim2 + bike2 + run2 + (t1s + dT1) + (t2s + dT2);
+      const delta = total2 - totalSec;
+      what_total.textContent = fmt(total2);
+      what_delta.textContent = (delta>=0?"+":"-")+fmt(Math.abs(delta));
+    } else {
+      out_total.textContent = "--:--:--";
+      status.textContent = "Brakuje: " + (missing.length?missing.join(", "):"uzupełnij dane");
+      status.className = "error";
+      what_total.textContent = "--:--:--";
+      what_delta.textContent = "--";
+    }
+  }
+
+  function hookInputs(){
+    race.addEventListener("change", () => { applyRacePreset(); calc(); });
+
+    [if_preset, grade_preset, cda_preset, crr_preset, air_preset, wind_preset, eta_preset].forEach(sel=>{
+      if(!sel) return;
+      sel.addEventListener("change", () => { applyFtpPresets(); calc(); });
+    });
+
+    document.querySelectorAll("input, select").forEach(x=>{
+      x.addEventListener("input", calc);
+      x.addEventListener("change", calc);
+    });
+  }
+
+  // init
+  applyRacePreset();
+  updateBikeBlocks();
+  applyFtpPresets();
+  hookInputs();
+  calc();
+});
+</script>
+</body>
+</html>
