@@ -77,7 +77,6 @@
     .toast.ok{ background:#e8f7ee; color:#0a7d28; }
     .toast.err{ background:#ffecec; color:#c40000; }
 
-    /* what-if sign selector */
     .whatifRow{
       display:grid;
       grid-template-columns: 1fr 1.2fr;
@@ -220,7 +219,6 @@
         </div>
       </div>
 
-      <!-- FTP/IF: pełna sekcja jak w v16 -->
       <div id="bike_block_ftp" style="display:none">
         <div class="grid">
           <div>
@@ -418,7 +416,7 @@
 
     <div class="card">
       <h3>Symulacja „co jeśli” <span class="pill">delta</span></h3>
-      <div class="muted">Na iPhone nie musisz wpisywać +/- — wybierasz „Szybciej/Wolniej”. W polach wpisuj wartość dodatnią.</div>
+      <div class="muted">Wpisuj wartości dodatnie, kierunek wybierasz guzikami „Szybciej/Wolniej”.</div>
 
       <div class="grid3" style="margin-top:12px">
         <div class="whatifRow">
@@ -481,18 +479,18 @@
 
       <div class="saveRow">
         <div>
-          <label for="sim_name">Zapisz symulację pod nazwą</label>
-          <input id="sim_name" placeholder='np. "Mrągowo: -5/100m, +1km/h, -10/km"'>
+          <label for="sim_name">Zapisz (cały stan) pod nazwą</label>
+          <input id="sim_name" placeholder='np. "Mrągowo A (IF 0.80, tempo 6:30)"'>
           <div class="muted">Zapis działa lokalnie (offline) w pamięci przeglądarki.</div>
         </div>
         <div class="actions" style="justify-content:flex-start;">
-          <button type="button" class="btn primary" id="btnSaveSim">Zapisz symulację</button>
+          <button type="button" class="btn primary" id="btnSaveSim">Zapisz</button>
         </div>
       </div>
 
       <div class="grid" style="margin-top:12px">
         <div>
-          <label for="sim_list">Zapisane symulacje</label>
+          <label for="sim_list">Zapisane</label>
           <select id="sim_list">
             <option value="">— brak —</option>
           </select>
@@ -522,8 +520,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "Pełny (IM)": { swim:3800, bike:180, run:42.2 }
   };
 
-  const STORAGE_SIMS_KEY = "tri_saved_sims_v1";
-
+  const STORAGE_SIMS_KEY = "tri_saved_sims_v2_fullstate";
   const el = (id) => document.getElementById(id);
 
   const form = el("appForm");
@@ -607,18 +604,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let bikeMode = "speed";
   let runMode  = "pace";
 
-  // What-if sign meaning:
-  // - swim/run/t1/t2: faster => negative delta (less seconds)
-  // - bike (km/h): faster => positive delta
-  const sg = {
-    swim: -1,
-    bike: +1,
-    run:  -1,
-    t1:   -1,
-    t2:   -1
-  };
+  // What-if signs:
+  // - swim/run/t1/t2: faster => - ; slower => +
+  // - bike (km/h): faster => + ; slower => -
+  const sg = { swim:-1, bike:+1, run:-1, t1:-1, t2:-1 };
 
-  // last computed values for Copy
   let last = {
     swimSec: null, bikeSec: null, runSec: null, t1s: null, t2s: null, totalSec: null,
     swimPace100: null, runPace: null, bikeSpeedKmh: null
@@ -635,40 +625,29 @@ document.addEventListener("DOMContentLoaded", () => {
   function setSeg3(a,b,c,val){ [a,b,c].forEach(x=>x.setAttribute("aria-pressed","false")); val.setAttribute("aria-pressed","true"); }
 
   function setSign(group, fast){
-    // fast=true => "Szybciej"
     if(group === "bike"){
-      sg.bike = fast ? +1 : -1; // km/h
-      el("sg_bike_fast")?.setAttribute("aria-pressed", fast ? "true" : "false");
-      el("sg_bike_slow")?.setAttribute("aria-pressed", fast ? "false" : "true");
+      sg.bike = fast ? +1 : -1;
+      el("sg_bike_fast").setAttribute("aria-pressed", fast ? "true" : "false");
+      el("sg_bike_slow").setAttribute("aria-pressed", fast ? "false" : "true");
     } else {
-      sg[group] = fast ? -1 : +1; // seconds
-      el(`sg_${group}_fast`)?.setAttribute("aria-pressed", fast ? "true" : "false");
-      el(`sg_${group}_slow`)?.setAttribute("aria-pressed", fast ? "false" : "true");
+      sg[group] = fast ? -1 : +1;
+      el(`sg_${group}_fast`).setAttribute("aria-pressed", fast ? "true" : "false");
+      el(`sg_${group}_slow`).setAttribute("aria-pressed", fast ? "false" : "true");
     }
     calc();
   }
 
   // Sign buttons
-  el("sg_swim_fast")?.addEventListener("click",()=>setSign("swim", true));
-  el("sg_swim_slow")?.addEventListener("click",()=>setSign("swim", false));
-  el("sg_bike_fast")?.addEventListener("click",()=>setSign("bike", true));
-  el("sg_bike_slow")?.addEventListener("click",()=>setSign("bike", false));
-  el("sg_run_fast")?.addEventListener("click",()=>setSign("run", true));
-  el("sg_run_slow")?.addEventListener("click",()=>setSign("run", false));
-  el("sg_t1_fast")?.addEventListener("click",()=>setSign("t1", true));
-  el("sg_t1_slow")?.addEventListener("click",()=>setSign("t1", false));
-  el("sg_t2_fast")?.addEventListener("click",()=>setSign("t2", true));
-  el("sg_t2_slow")?.addEventListener("click",()=>setSign("t2", false));
-
-  swim_mode_pace.addEventListener("click", () => { swimMode="pace"; setSeg(swim_mode_pace, swim_mode_time); updateSwimBlocks(); calc(); });
-  swim_mode_time.addEventListener("click", () => { swimMode="time"; setSeg(swim_mode_time, swim_mode_pace); updateSwimBlocks(); calc(); });
-
-  bike_mode_speed.addEventListener("click", () => { bikeMode="speed"; setSeg3(bike_mode_speed,bike_mode_time,bike_mode_ftp,bike_mode_speed); updateBikeBlocks(); calc(); });
-  bike_mode_time .addEventListener("click", () => { bikeMode="time";  setSeg3(bike_mode_speed,bike_mode_time,bike_mode_ftp,bike_mode_time ); updateBikeBlocks(); calc(); });
-  bike_mode_ftp  .addEventListener("click", () => { bikeMode="ftp";   setSeg3(bike_mode_speed,bike_mode_time,bike_mode_ftp,bike_mode_ftp  ); updateBikeBlocks(); applyFtpPresets(); calc(); });
-
-  run_mode_pace.addEventListener("click", () => { runMode="pace"; setSeg(run_mode_pace, run_mode_time); updateRunBlocks(); calc(); });
-  run_mode_time.addEventListener("click", () => { runMode="time"; setSeg(run_mode_time, run_mode_pace); updateRunBlocks(); calc(); });
+  el("sg_swim_fast").addEventListener("click",()=>setSign("swim", true));
+  el("sg_swim_slow").addEventListener("click",()=>setSign("swim", false));
+  el("sg_bike_fast").addEventListener("click",()=>setSign("bike", true));
+  el("sg_bike_slow").addEventListener("click",()=>setSign("bike", false));
+  el("sg_run_fast").addEventListener("click",()=>setSign("run", true));
+  el("sg_run_slow").addEventListener("click",()=>setSign("run", false));
+  el("sg_t1_fast").addEventListener("click",()=>setSign("t1", true));
+  el("sg_t1_slow").addEventListener("click",()=>setSign("t1", false));
+  el("sg_t2_fast").addEventListener("click",()=>setSign("t2", true));
+  el("sg_t2_slow").addEventListener("click",()=>setSign("t2", false));
 
   function updateSwimBlocks(){
     swim_block_pace.style.display = (swimMode==="pace") ? "" : "none";
@@ -684,8 +663,18 @@ document.addEventListener("DOMContentLoaded", () => {
     bike_block_ftp.style.display   = (bikeMode==="ftp")   ? "" : "none";
     bike_speed.disabled = (bikeMode!=="speed");
     bike_time.disabled = true;
-    if (bike_time_manual) bike_time_manual.disabled = (bikeMode!=="time");
+    bike_time_manual.disabled = (bikeMode!=="time");
   }
+
+  swim_mode_pace.addEventListener("click", () => { swimMode="pace"; setSeg(swim_mode_pace, swim_mode_time); updateSwimBlocks(); calc(); });
+  swim_mode_time.addEventListener("click", () => { swimMode="time"; setSeg(swim_mode_time, swim_mode_pace); updateSwimBlocks(); calc(); });
+
+  bike_mode_speed.addEventListener("click", () => { bikeMode="speed"; setSeg3(bike_mode_speed,bike_mode_time,bike_mode_ftp,bike_mode_speed); updateBikeBlocks(); calc(); });
+  bike_mode_time .addEventListener("click", () => { bikeMode="time";  setSeg3(bike_mode_speed,bike_mode_time,bike_mode_ftp,bike_mode_time ); updateBikeBlocks(); calc(); });
+  bike_mode_ftp  .addEventListener("click", () => { bikeMode="ftp";   setSeg3(bike_mode_speed,bike_mode_time,bike_mode_ftp,bike_mode_ftp  ); updateBikeBlocks(); applyFtpPresets(); calc(); });
+
+  run_mode_pace.addEventListener("click", () => { runMode="pace"; setSeg(run_mode_pace, run_mode_time); updateRunBlocks(); calc(); });
+  run_mode_time.addEventListener("click", () => { runMode="time"; setSeg(run_mode_time, run_mode_pace); updateRunBlocks(); calc(); });
 
   const PRESET_VALS = {
     grade: { flat:0, rolling:1, hills:3, down:-1 },
@@ -698,13 +687,13 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   function applyFtpPresets(){
-    if (if_preset && if_preset.value !== "custom") IF.value = PRESET_VALS.IF[if_preset.value].toString();
-    if (grade_preset && grade_preset.value !== "custom") grade.value = PRESET_VALS.grade[grade_preset.value].toString();
-    if (cda_preset && cda_preset.value !== "custom") cda.value = PRESET_VALS.cda[cda_preset.value].toString();
-    if (crr_preset && crr_preset.value !== "custom") crr.value = PRESET_VALS.crr[crr_preset.value].toString();
-    if (air_preset && air_preset.value !== "custom") rho.value = PRESET_VALS.air[air_preset.value].toString();
-    if (wind_preset && wind_preset.value !== "custom") wind.value = PRESET_VALS.wind[wind_preset.value].toString();
-    if (eta_preset && eta_preset.value !== "custom") drivetrain.value = PRESET_VALS.eta[eta_preset.value].toString();
+    if (if_preset.value !== "custom") IF.value = PRESET_VALS.IF[if_preset.value].toString();
+    if (grade_preset.value !== "custom") grade.value = PRESET_VALS.grade[grade_preset.value].toString();
+    if (cda_preset.value !== "custom") cda.value = PRESET_VALS.cda[cda_preset.value].toString();
+    if (crr_preset.value !== "custom") crr.value = PRESET_VALS.crr[crr_preset.value].toString();
+    if (air_preset.value !== "custom") rho.value = PRESET_VALS.air[air_preset.value].toString();
+    if (wind_preset.value !== "custom") wind.value = PRESET_VALS.wind[wind_preset.value].toString();
+    if (eta_preset.value !== "custom") drivetrain.value = PRESET_VALS.eta[eta_preset.value].toString();
   }
 
   function parseNumber(v){
@@ -816,7 +805,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let swimSec=null, bikeSec=null, runSec=null;
 
-    /* SWIM: tempo <-> czas */
+    // SWIM
     swim_time_calc.value = "";
     swim_pace_calc.value = "";
     if(sM!=null){
@@ -845,7 +834,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    /* BIKE */
+    // BIKE
     if(bK!=null){
       if(bikeMode==="speed"){
         const spd = parsePositive(bike_speed.value);
@@ -920,7 +909,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    /* RUN: tempo <-> czas */
+    // RUN
     run_time_calc.value = "";
     run_pace_calc.value = "";
     if(rK!=null){
@@ -956,17 +945,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const t1s = parseTimeToSeconds(t1.value);
     const t2s = parseTimeToSeconds(t2.value);
 
-    if(t1s==null){
-      markNeed(t1,true);
-      showHint(H.t1, hasValue(t1));
-      missing.push("T1");
-    } else { markNeed(t1,false); showHint(H.t1,false); }
+    if(t1s==null){ markNeed(t1,true); showHint(H.t1, hasValue(t1)); missing.push("T1"); }
+    else { markNeed(t1,false); showHint(H.t1,false); }
 
-    if(t2s==null){
-      markNeed(t2,true);
-      showHint(H.t2, hasValue(t2));
-      missing.push("T2");
-    } else { markNeed(t2,false); showHint(H.t2,false); }
+    if(t2s==null){ markNeed(t2,true); showHint(H.t2, hasValue(t2)); missing.push("T2"); }
+    else { markNeed(t2,false); showHint(H.t2,false); }
 
     last.swimSec = swimSec; last.bikeSec = bikeSec; last.runSec = runSec; last.t1s = t1s; last.t2s = t2s;
 
@@ -977,47 +960,36 @@ document.addEventListener("DOMContentLoaded", () => {
       status.textContent = "OK — policzone.";
       status.className = "ok";
 
-      // WHAT-IF (no +/- typing)
-      const dSw = (parseNumber(d_swim.value) ?? 0) * sg.swim; // seconds/100m
-      const dBk = (parseNumber(d_bike.value) ?? 0) * sg.bike; // km/h
-      const dRn = (parseNumber(d_run.value) ?? 0) * sg.run;   // seconds/km
-      const dT1 = (parseNumber(d_t1.value) ?? 0) * sg.t1;     // seconds
-      const dT2 = (parseNumber(d_t2.value) ?? 0) * sg.t2;     // seconds
+      const dSw = (parseNumber(d_swim.value) ?? 0) * sg.swim;
+      const dBk = (parseNumber(d_bike.value) ?? 0) * sg.bike;
+      const dRn = (parseNumber(d_run.value) ?? 0) * sg.run;
+      const dT1 = (parseNumber(d_t1.value) ?? 0) * sg.t1;
+      const dT2 = (parseNumber(d_t2.value) ?? 0) * sg.t2;
 
       let swim2 = swimSec;
       if(swimMode==="pace"){
         const pace100 = parseTimeToSeconds(swim_pace.value);
-        if(pace100!=null){
-          const pace2 = Math.max(1, pace100 + dSw);
-          swim2 = (Math.round(sM)/100.0)*pace2;
-        }
+        if(pace100!=null) swim2 = (Math.round(sM)/100.0)*Math.max(1, pace100 + dSw);
       }
 
       let bike2 = bikeSec;
-      // Dla prostego "co jeśli" na rowerze zmieniamy prędkość tylko, gdy rower jest w trybie prędkości.
-      // (Jeśli jest czas/FTP, "co jeśli" roweru możesz zostawić puste albo używać tylko na speed.)
       if(bikeMode==="speed"){
         const spd = parsePositive(bike_speed.value);
-        if(spd!=null){
-          const spd2 = Math.max(0.1, spd + dBk);
-          bike2 = (bK/spd2)*3600.0;
-        }
+        if(spd!=null) bike2 = (bK/Math.max(0.1, spd + dBk))*3600.0;
       }
 
       let run2 = runSec;
       if(runMode==="pace"){
         const pace = parseTimeToSeconds(run_pace.value);
-        if(pace!=null){
-          const pace2 = Math.max(1, pace + dRn);
-          run2 = rK*pace2;
-        }
+        if(pace!=null) run2 = rK*Math.max(1, pace + dRn);
       }
 
       const t1_2 = Math.max(0, t1s + dT1);
       const t2_2 = Math.max(0, t2s + dT2);
-      const total2 = swim2 + bike2 + run2 + t1_2 + t2_2;
 
+      const total2 = swim2 + bike2 + run2 + t1_2 + t2_2;
       const delta = total2 - totalSec;
+
       what_total.textContent = fmt(total2);
       what_delta.textContent = (delta>=0?"+":"-")+fmt(Math.abs(delta));
     } else {
@@ -1033,7 +1005,6 @@ document.addEventListener("DOMContentLoaded", () => {
     race.addEventListener("change", () => { applyRacePreset(); calc(); });
 
     [if_preset, grade_preset, cda_preset, crr_preset, air_preset, wind_preset, eta_preset].forEach(sel=>{
-      if(!sel) return;
       sel.addEventListener("change", () => { applyFtpPresets(); calc(); });
     });
 
@@ -1046,26 +1017,22 @@ document.addEventListener("DOMContentLoaded", () => {
   function resetAll(){
     form.reset();
 
-    // reset modes
     swimMode = "pace"; setSeg(swim_mode_pace, swim_mode_time);
     bikeMode = "speed"; setSeg3(bike_mode_speed,bike_mode_time,bike_mode_ftp,bike_mode_speed);
     runMode  = "pace"; setSeg(run_mode_pace, run_mode_time);
 
-    // reset signs to defaults (fast)
-    setSign("swim", true);
-    setSign("bike", true);
-    setSign("run",  true);
-    setSign("t1",   true);
-    setSign("t2",   true);
-
-    // update blocks + presets/distances
     updateSwimBlocks();
     updateBikeBlocks();
     updateRunBlocks();
     applyRacePreset();
     applyFtpPresets();
 
-    // clear computed fields explicitly
+    setSign("swim", true);
+    setSign("bike", true);
+    setSign("run",  true);
+    setSign("t1",   true);
+    setSign("t2",   true);
+
     swim_time_calc.value = "";
     swim_pace_calc.value = "";
     bike_time.value = "";
@@ -1073,7 +1040,6 @@ document.addEventListener("DOMContentLoaded", () => {
     run_time_calc.value = "";
     run_pace_calc.value = "";
 
-    // clear validation + outputs
     clearNeed();
     out_swim.textContent = "--:--:--";
     out_bike.textContent = "--:--:--";
@@ -1099,26 +1065,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const rK = parsePositive(run_km.value);
 
     const distLine = `${race.value} | Swim ${sM ?? "?"}m | Bike ${bK ?? "?"}km | Run ${rK ?? "?"}km`;
-
     const swimInfo = `Swim ${fmt(last.swimSec)} (${last.swimPace100!=null ? fmtPace(last.swimPace100)+"/100m" : "tempo ?"})`;
     const bikeInfo = `Bike ${fmt(last.bikeSec)} (${last.bikeSpeedKmh!=null ? (Math.round(last.bikeSpeedKmh*10)/10)+" km/h" : "v ?"})`;
     const runInfo  = `Run ${fmt(last.runSec)} (${last.runPace!=null ? fmtPace(last.runPace)+"/km" : "tempo ?"})`;
     const tInfo    = `T1 ${fmt(last.t1s)} | T2 ${fmt(last.t2s)}`;
     const totalInfo= `TOTAL ${fmt(last.totalSec)}`;
-
     const text = `${distLine}\n${swimInfo}\n${bikeInfo}\n${runInfo}\n${tInfo}\n${totalInfo}`;
 
     try{
       await navigator.clipboard.writeText(text);
-      toastMsg("Skopiowano do schowka ✅", true);
+      toastMsg("Skopiowano ✅", true);
     } catch(e){
       const ok = window.prompt("Skopiuj ręcznie:", text);
-      if(ok !== null) toastMsg("Podsumowanie wyświetlone do skopiowania ✅", true);
+      if(ok !== null) toastMsg("Podsumowanie gotowe ✅", true);
       else toastMsg("Nie udało się skopiować.", false);
     }
   }
 
-  // ---- Saved simulations (LocalStorage) ----
+  // ---- Saved simulations: FULL STATE (LocalStorage) ----
   function loadSims(){
     try{
       const raw = localStorage.getItem(STORAGE_SIMS_KEY);
@@ -1139,9 +1103,7 @@ document.addEventListener("DOMContentLoaded", () => {
     opt0.textContent = sims.length ? "— wybierz —" : "— brak —";
     sim_list.appendChild(opt0);
 
-    sims
-      .slice()
-      .sort((a,b)=> (a.name||"").localeCompare(b.name||""))
+    sims.slice().sort((a,b)=> (a.name||"").localeCompare(b.name||""))
       .forEach(s=>{
         const o = document.createElement("option");
         o.value = s.name;
@@ -1149,18 +1111,69 @@ document.addEventListener("DOMContentLoaded", () => {
         sim_list.appendChild(o);
       });
 
-    if(selectNameToKeep){
-      sim_list.value = selectNameToKeep;
-    }
+    if(selectNameToKeep) sim_list.value = selectNameToKeep;
   }
+
+  function dumpAllFields(){
+    const ids = [
+      "race","swim_m","bike_km","run_km",
+      "swim_pace","swim_time",
+      "bike_speed","bike_time_manual",
+      "ftp","if_preset","if",
+      "mass","bike_mass",
+      "grade_preset","grade",
+      "cda_preset","cda",
+      "crr_preset","crr",
+      "air_preset","rho",
+      "wind_preset","wind",
+      "eta_preset","drivetrain",
+      "run_pace","run_time",
+      "t1","t2",
+      "d_swim","d_bike","d_run","d_t1","d_t2"
+    ];
+    const out = {};
+    ids.forEach(id=>{
+      const node = document.getElementById(id);
+      if(!node) return;
+      out[id] = node.value;
+    });
+    return out;
+  }
+
+  function restoreAllFields(values){
+    if(!values) return;
+    Object.keys(values).forEach(id=>{
+      const node = document.getElementById(id);
+      if(!node) return;
+      node.value = values[id];
+    });
+  }
+
+  function restoreModes(modes){
+    const sm = modes?.swimMode || "pace";
+    const bm = modes?.bikeMode || "speed";
+    const rm = modes?.runMode  || "pace";
+
+    if(sm === "time") swim_mode_time.click(); else swim_mode_pace.click();
+    if(bm === "time") bike_mode_time.click();
+    else if(bm === "ftp") bike_mode_ftp.click();
+    else bike_mode_speed.click();
+    if(rm === "time") run_mode_time.click(); else run_mode_pace.click();
+  }
+
+  function restoreDirs(dir){
+    const d = dir || {};
+    setSign("swim", (d.swim ?? "fast") === "fast");
+    setSign("bike", (d.bike ?? "fast") === "fast");
+    setSign("run",  (d.run  ?? "fast") === "fast");
+    setSign("t1",   (d.t1   ?? "fast") === "fast");
+    setSign("t2",   (d.t2   ?? "fast") === "fast");
+  }
+
   function currentSimPayload(){
     return {
-      d_swim: (d_swim.value ?? "").toString().trim(),
-      d_bike: (d_bike.value ?? "").toString().trim(),
-      d_run:  (d_run.value ?? "").toString().trim(),
-      d_t1:   (d_t1.value ?? "").toString().trim(),
-      d_t2:   (d_t2.value ?? "").toString().trim(),
-      // store the direction as "fast"/"slow" for each
+      fields: dumpAllFields(),
+      modes: { swimMode, bikeMode, runMode },
       dir: {
         swim: sg.swim < 0 ? "fast" : "slow",
         bike: sg.bike > 0 ? "fast" : "slow",
@@ -1170,19 +1183,21 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
   }
-  function applySimPayload(p){
-    d_swim.value = p?.d_swim ?? "";
-    d_bike.value = p?.d_bike ?? "";
-    d_run.value  = p?.d_run  ?? "";
-    d_t1.value   = p?.d_t1   ?? "";
-    d_t2.value   = p?.d_t2   ?? "";
 
-    const dir = p?.dir || {};
-    setSign("swim", (dir.swim ?? "fast") === "fast");
-    setSign("bike", (dir.bike ?? "fast") === "fast");
-    setSign("run",  (dir.run  ?? "fast") === "fast");
-    setSign("t1",   (dir.t1   ?? "fast") === "fast");
-    setSign("t2",   (dir.t2   ?? "fast") === "fast");
+  function applySimPayload(p){
+    restoreAllFields(p?.fields);
+
+    // ustaw dystanse z presetu jeśli race != "Własny"
+    applyRacePreset();
+
+    // presety FTP (ustawia inputy na podstawie selectów, jeśli nie custom)
+    applyFtpPresets();
+
+    // tryby (przełącza widoki)
+    restoreModes(p?.modes);
+
+    // kierunki co-jeśli
+    restoreDirs(p?.dir);
 
     calc();
   }
@@ -1190,7 +1205,7 @@ document.addEventListener("DOMContentLoaded", () => {
   btnSaveSim.addEventListener("click", () => {
     const name = (sim_name.value ?? "").toString().trim();
     if(!name){
-      toastMsg("Podaj nazwę symulacji.", false);
+      toastMsg("Podaj nazwę zapisu.", false);
       return;
     }
     const sims = loadSims();
@@ -1198,7 +1213,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const payload = currentSimPayload();
 
     if(idx >= 0){
-      const ok = window.confirm(`Symulacja "${name}" już istnieje. Nadpisać?`);
+      const ok = window.confirm(`Zapis "${name}" już istnieje. Nadpisać?`);
       if(!ok) return;
       sims[idx] = { name, payload, updatedAt: Date.now() };
     } else {
@@ -1206,32 +1221,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     saveSims(sims);
     refreshSimList(name);
-    toastMsg("Zapisano symulację ✅", true);
+    toastMsg("Zapisano ✅", true);
   });
 
   btnLoadSim.addEventListener("click", () => {
     const name = sim_list.value;
-    if(!name){ toastMsg("Wybierz symulację z listy.", false); return; }
+    if(!name){ toastMsg("Wybierz zapis z listy.", false); return; }
     const sims = loadSims();
     const s = sims.find(x => x.name === name);
-    if(!s){ toastMsg("Nie znaleziono symulacji.", false); refreshSimList(); return; }
+    if(!s){ toastMsg("Nie znaleziono.", false); refreshSimList(); return; }
     applySimPayload(s.payload);
     toastMsg(`Otworzono: ${name} ✅`, true);
   });
 
   btnDeleteSim.addEventListener("click", () => {
     const name = sim_list.value;
-    if(!name){ toastMsg("Wybierz symulację do usunięcia.", false); return; }
-    const ok = window.confirm(`Usunąć symulację "${name}"?`);
+    if(!name){ toastMsg("Wybierz zapis do usunięcia.", false); return; }
+    const ok = window.confirm(`Usunąć zapis "${name}"?`);
     if(!ok) return;
     const sims = loadSims().filter(x => x.name !== name);
     saveSims(sims);
     refreshSimList();
     toastMsg("Usunięto ✅", true);
   });
-
-  btnReset.addEventListener("click", resetAll);
-  btnCopy.addEventListener("click", copySummary);
 
   function init(){
     applyRacePreset();
@@ -1240,7 +1252,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateRunBlocks();
     applyFtpPresets();
 
-    // init signs UI
     setSign("swim", true);
     setSign("bike", true);
     setSign("run",  true);
@@ -1251,6 +1262,9 @@ document.addEventListener("DOMContentLoaded", () => {
     refreshSimList();
     calc();
   }
+
+  btnReset.addEventListener("click", resetAll);
+  btnCopy.addEventListener("click", copySummary);
 
   init();
 });
