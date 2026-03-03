@@ -42,8 +42,16 @@
     .need {
       border-color:#c40000 !important;
       box-shadow:0 0 0 3px rgba(196,0,0,0.14);
-      background: #fff7f7;
+      background:#fff7f7;
     }
+    .hint {
+      margin-top:6px;
+      font-size:12px;
+      color:#c40000;
+      font-weight:800;
+      display:none;
+    }
+    .hint.show { display:block; }
 
     @media(max-width:800px){ .grid, .grid3 { grid-template-columns:1fr; } }
   </style>
@@ -65,9 +73,21 @@
     </select>
 
     <div class="grid3" style="margin-top:12px">
-      <div><label for="swim_m">Pływanie (m)</label><input id="swim_m" inputmode="numeric"></div>
-      <div><label for="bike_km">Rower (km)</label><input id="bike_km" inputmode="decimal"></div>
-      <div><label for="run_km">Bieg (km)</label><input id="run_km" inputmode="decimal"></div>
+      <div>
+        <label for="swim_m">Pływanie (m)</label>
+        <input id="swim_m" inputmode="numeric">
+        <div class="hint" id="hint_swim_m"></div>
+      </div>
+      <div>
+        <label for="bike_km">Rower (km)</label>
+        <input id="bike_km" inputmode="decimal">
+        <div class="hint" id="hint_bike_km"></div>
+      </div>
+      <div>
+        <label for="run_km">Bieg (km)</label>
+        <input id="run_km" inputmode="decimal">
+        <div class="hint" id="hint_run_km"></div>
+      </div>
     </div>
     <div class="muted" id="dist_hint" style="margin-top:8px"></div>
   </div>
@@ -79,8 +99,16 @@
       <button id="swim_mode_time" aria-pressed="false" type="button">Czas</button>
     </div>
     <div class="grid">
-      <div><label for="swim_pace">Tempo (mm:ss /100m)</label><input id="swim_pace" placeholder="np. 2:10"></div>
-      <div><label for="swim_time">Czas (mm:ss lub hh:mm:ss)</label><input id="swim_time" placeholder="np. 32:00"></div>
+      <div>
+        <label for="swim_pace">Tempo (mm:ss /100m)</label>
+        <input id="swim_pace" placeholder="np. 2:10">
+        <div class="hint" id="hint_swim_pace">Użyj formatu mm:ss (np. 2:10).</div>
+      </div>
+      <div>
+        <label for="swim_time">Czas (mm:ss lub hh:mm:ss)</label>
+        <input id="swim_time" placeholder="np. 32:00">
+        <div class="hint" id="hint_swim_time">Użyj formatu mm:ss lub hh:mm:ss (np. 32:00 albo 1:05:30).</div>
+      </div>
     </div>
     <div class="out" id="out_swim">--:--:--</div>
   </div>
@@ -94,13 +122,29 @@
     </div>
 
     <div class="grid" id="bike_block_speed">
-      <div><label for="bike_speed">Prędkość (km/h)</label><input id="bike_speed" inputmode="decimal" placeholder="np. 32"></div>
-      <div><label for="bike_time" class="muted">Czas (wylicza się automatycznie)</label><input id="bike_time" disabled></div>
+      <div>
+        <label for="bike_speed">Prędkość (km/h)</label>
+        <input id="bike_speed" inputmode="decimal" placeholder="np. 32">
+        <div class="hint" id="hint_bike_speed">Wpisz liczbę > 0 (np. 32).</div>
+      </div>
+      <div>
+        <label for="bike_time" class="muted">Czas (wylicza się automatycznie)</label>
+        <input id="bike_time" disabled>
+        <div class="hint" id="hint_bike_time"></div>
+      </div>
     </div>
 
     <div class="grid" id="bike_block_time" style="display:none">
-      <div><label for="bike_time_manual">Czas (mm:ss lub hh:mm:ss)</label><input id="bike_time_manual" placeholder="np. 3:00:00"></div>
-      <div><label for="bike_speed_calc" class="muted">Prędkość (wylicza się automatycznie)</label><input id="bike_speed_calc" disabled></div>
+      <div>
+        <label for="bike_time_manual">Czas (mm:ss lub hh:mm:ss)</label>
+        <input id="bike_time_manual" placeholder="np. 3:00:00">
+        <div class="hint" id="hint_bike_time_manual">Użyj formatu mm:ss lub hh:mm:ss (np. 3:00:00).</div>
+      </div>
+      <div>
+        <label for="bike_speed_calc" class="muted">Prędkość (wylicza się automatycznie)</label>
+        <input id="bike_speed_calc" disabled>
+        <div class="hint" id="hint_bike_speed_calc"></div>
+      </div>
     </div>
 
     <div id="bike_block_ftp" style="display:none">
@@ -108,6 +152,7 @@
         <div>
           <label for="ftp">FTP (W)</label>
           <input id="ftp" inputmode="numeric" placeholder="np. 260">
+          <div class="hint" id="hint_ftp">Wpisz liczbę > 0 (np. 260).</div>
         </div>
         <div>
           <label for="if_preset">IF (Intensity Factor)</label>
@@ -120,14 +165,23 @@
           </select>
           <div style="height:8px"></div>
           <input id="if" inputmode="decimal" placeholder="np. 0.80">
+          <div class="hint" id="hint_if">Wpisz liczbę > 0 (np. 0.80).</div>
         </div>
       </div>
 
       <div class="hr"></div>
 
       <div class="grid3">
-        <div><label for="mass">Masa zawodnika (kg)</label><input id="mass" inputmode="decimal" placeholder="np. 97"></div>
-        <div><label for="bike_mass">Masa roweru+sprzętu (kg)</label><input id="bike_mass" inputmode="decimal" placeholder="np. 10"></div>
+        <div>
+          <label for="mass">Masa zawodnika (kg)</label>
+          <input id="mass" inputmode="decimal" placeholder="np. 97">
+          <div class="hint" id="hint_mass">Wpisz liczbę > 0 (np. 97).</div>
+        </div>
+        <div>
+          <label for="bike_mass">Masa roweru+sprzętu (kg)</label>
+          <input id="bike_mass" inputmode="decimal" placeholder="np. 10">
+          <div class="hint" id="hint_bike_mass">Wpisz liczbę > 0 (np. 10).</div>
+        </div>
         <div>
           <label for="grade_preset">Nachylenie</label>
           <select id="grade_preset">
@@ -139,6 +193,7 @@
           </select>
           <div style="height:8px"></div>
           <input id="grade" inputmode="decimal" placeholder="np. 0">
+          <div class="hint" id="hint_grade">Wpisz liczbę (może być ujemna, np. -1).</div>
         </div>
       </div>
 
@@ -155,6 +210,7 @@
           </select>
           <div style="height:8px"></div>
           <input id="cda" inputmode="decimal" placeholder="np. 0.26">
+          <div class="hint" id="hint_cda">Wpisz liczbę > 0 (np. 0.26).</div>
         </div>
 
         <div>
@@ -167,6 +223,7 @@
           </select>
           <div style="height:8px"></div>
           <input id="crr" inputmode="decimal" placeholder="np. 0.004">
+          <div class="hint" id="hint_crr">Wpisz liczbę > 0 (np. 0.004).</div>
         </div>
 
         <div>
@@ -180,6 +237,7 @@
           </select>
           <div style="height:8px"></div>
           <input id="rho" inputmode="decimal" placeholder="np. 1.226">
+          <div class="hint" id="hint_rho">Wpisz liczbę > 0 (np. 1.226).</div>
         </div>
       </div>
 
@@ -195,6 +253,7 @@
           </select>
           <div style="height:8px"></div>
           <input id="wind" inputmode="decimal" placeholder="np. 0">
+          <div class="hint" id="hint_wind">Wpisz liczbę (może być ujemna, np. -2).</div>
         </div>
 
         <div>
@@ -207,6 +266,7 @@
           </select>
           <div style="height:8px"></div>
           <input id="drivetrain" inputmode="decimal" placeholder="np. 0.97">
+          <div class="hint" id="hint_drivetrain">Wpisz liczbę z zakresu (0–1), np. 0.97.</div>
         </div>
       </div>
 
@@ -225,8 +285,16 @@
       <button id="run_mode_time" aria-pressed="false" type="button">Czas</button>
     </div>
     <div class="grid">
-      <div><label for="run_pace">Tempo (mm:ss /km)</label><input id="run_pace" placeholder="np. 6:30"></div>
-      <div><label for="run_time">Czas (mm:ss lub hh:mm:ss)</label><input id="run_time" placeholder="np. 2:20:00"></div>
+      <div>
+        <label for="run_pace">Tempo (mm:ss /km)</label>
+        <input id="run_pace" placeholder="np. 6:30">
+        <div class="hint" id="hint_run_pace">Użyj formatu mm:ss (np. 6:30).</div>
+      </div>
+      <div>
+        <label for="run_time">Czas (mm:ss lub hh:mm:ss)</label>
+        <input id="run_time" placeholder="np. 2:20:00">
+        <div class="hint" id="hint_run_time">Użyj formatu mm:ss lub hh:mm:ss (np. 2:20:00).</div>
+      </div>
     </div>
     <div class="out" id="out_run">--:--:--</div>
   </div>
@@ -234,12 +302,20 @@
   <div class="card">
     <h3>Zmiany</h3>
     <div class="grid">
-      <div><label for="t1">T1 (mm:ss)</label><input id="t1" placeholder="np. 4:00"></div>
-      <div><label for="t2">T2 (mm:ss)</label><input id="t2" placeholder="np. 3:00"></div>
+      <div>
+        <label for="t1">T1 (mm:ss)</label>
+        <input id="t1" placeholder="np. 4:00">
+        <div class="hint" id="hint_t1">Użyj formatu mm:ss (np. 4:00).</div>
+      </div>
+      <div>
+        <label for="t2">T2 (mm:ss)</label>
+        <input id="t2" placeholder="np. 3:00">
+        <div class="hint" id="hint_t2">Użyj formatu mm:ss (np. 3:00).</div>
+      </div>
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" id="total_card">
     <h3>Czas łączny</h3>
     <div class="outbig" id="out_total">--:--:--</div>
     <div id="status" class="error">Uzupełnij dane</div>
@@ -284,7 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Swim
   const swim_pace = el("swim_pace"), swim_time = el("swim_time"), out_swim = el("out_swim");
 
-  // Bike (common)
+  // Bike
   const bike_speed = el("bike_speed"), bike_time = el("bike_time"), bike_time_manual = el("bike_time_manual"), bike_speed_calc = el("bike_speed_calc"),
         out_bike = el("out_bike"), bike_block_speed = el("bike_block_speed"), bike_block_time = el("bike_block_time"), bike_block_ftp = el("bike_block_ftp");
 
@@ -306,6 +382,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Total/status
   const out_total = el("out_total"), status = el("status");
+  const total_card = el("total_card");
 
   // What-if
   const d_swim = el("d_swim"), d_bike = el("d_bike"), d_run = el("d_run"), d_t1 = el("d_t1"), d_t2 = el("d_t2");
@@ -315,6 +392,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const swim_mode_pace = el("swim_mode_pace"), swim_mode_time = el("swim_mode_time");
   const bike_mode_speed = el("bike_mode_speed"), bike_mode_time  = el("bike_mode_time"), bike_mode_ftp = el("bike_mode_ftp");
   const run_mode_pace = el("run_mode_pace"), run_mode_time = el("run_mode_time");
+
+  // Hints
+  const H = {
+    swim_pace: el("hint_swim_pace"),
+    swim_time: el("hint_swim_time"),
+    bike_speed: el("hint_bike_speed"),
+    bike_time_manual: el("hint_bike_time_manual"),
+    run_pace: el("hint_run_pace"),
+    run_time: el("hint_run_time"),
+    t1: el("hint_t1"),
+    t2: el("hint_t2"),
+    ftp: el("hint_ftp"),
+    if: el("hint_if"),
+    mass: el("hint_mass"),
+    bike_mass: el("hint_bike_mass"),
+    grade: el("hint_grade"),
+    cda: el("hint_cda"),
+    crr: el("hint_crr"),
+    rho: el("hint_rho"),
+    wind: el("hint_wind"),
+    drivetrain: el("hint_drivetrain")
+  };
 
   let swimMode = "pace";
   let bikeMode = "speed";
@@ -401,11 +500,22 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------- validation UI helpers ---------- */
   function clearNeed(){
     document.querySelectorAll(".need").forEach(x=>x.classList.remove("need"));
+    document.querySelectorAll(".hint.show").forEach(x=>x.classList.remove("show"));
   }
-  function markNeed(elem, isBad){
-    if(!elem) return;
-    if(isBad) elem.classList.add("need");
-    else elem.classList.remove("need");
+  function showHint(hintEl, on){ if(!hintEl) return; hintEl.classList.toggle("show", !!on); }
+  function markNeed(elem, bad){ if(!elem) return; elem.classList.toggle("need", !!bad); }
+
+  // smooth scroll to first missing field (throttled)
+  let lastScrollAt = 0;
+  function scrollToFirstError(firstElem){
+    if(!firstElem) return;
+    const now = Date.now();
+    if(now - lastScrollAt < 900) return; // throttle
+    lastScrollAt = now;
+
+    firstElem.scrollIntoView({ behavior:"smooth", block:"center" });
+    // focus without opening keyboard aggressively:
+    try { firstElem.focus({ preventScroll:true }); } catch(e) {}
   }
 
   function applyRacePreset(){
@@ -451,22 +561,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function calc(){
-    // reset highlights each time, then add back
     clearNeed();
 
+    let firstError = null;
     const missing = [];
 
     const sM = parsePositive(swim_m.value);
     const bK = parsePositive(bike_km.value);
     const rK = parsePositive(run_km.value);
 
-    markNeed(swim_m, sM==null);
-    markNeed(bike_km, bK==null);
-    markNeed(run_km,  rK==null);
-
-    if(sM==null) missing.push("dystans pływania");
-    if(bK==null) missing.push("dystans roweru");
-    if(rK==null) missing.push("dystans biegu");
+    if(sM==null){ markNeed(swim_m,true); if(!firstError) firstError=swim_m; missing.push("dystans pływania"); }
+    if(bK==null){ markNeed(bike_km,true); if(!firstError) firstError=bike_km; missing.push("dystans roweru"); }
+    if(rK==null){ markNeed(run_km,true);  if(!firstError) firstError=run_km;  missing.push("dystans biegu"); }
 
     let swimSec=null, bikeSec=null, runSec=null;
 
@@ -474,15 +580,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if(sM!=null){
       if(swimMode==="time"){
         swimSec = parseTimeToSeconds(swim_time.value);
-        markNeed(swim_time, swimSec==null);
-        // w trybie time nie wymagamy tempa
-        markNeed(swim_pace, false);
-        if(swimSec==null) missing.push("pływanie: czas");
+        const bad = (swimSec==null);
+        markNeed(swim_time,bad); showHint(H.swim_time, bad);
+        showHint(H.swim_pace,false); markNeed(swim_pace,false);
+        if(bad){ if(!firstError) firstError=swim_time; missing.push("pływanie: czas"); }
       } else {
         const pace100 = parseTimeToSeconds(swim_pace.value);
-        markNeed(swim_pace, pace100==null);
-        markNeed(swim_time, false);
-        if(pace100==null) missing.push("pływanie: tempo");
+        const bad = (pace100==null);
+        markNeed(swim_pace,bad); showHint(H.swim_pace, bad);
+        showHint(H.swim_time,false); markNeed(swim_time,false);
+        if(bad){ if(!firstError) firstError=swim_pace; missing.push("pływanie: tempo"); }
         else swimSec = (Math.round(sM)/100.0)*pace100;
       }
     }
@@ -491,24 +598,27 @@ document.addEventListener("DOMContentLoaded", () => {
     if(bK!=null){
       if(bikeMode==="speed"){
         const spd = parsePositive(bike_speed.value);
-        markNeed(bike_speed, spd==null);
-        if(bike_time_manual) markNeed(bike_time_manual, false);
-        // FTP fields not required in this mode
+        const bad = (spd==null);
+        markNeed(bike_speed,bad); showHint(H.bike_speed, bad);
+        if(bike_time_manual){ markNeed(bike_time_manual,false); showHint(H.bike_time_manual,false); }
+        // FTP fields not required here
         [ftp, IF, mass, bike_mass, grade, cda, crr, rho, wind, drivetrain].forEach(x=>markNeed(x,false));
+        Object.values(H).forEach(h=> { /* keep only those shown by logic */ });
 
-        if(spd==null) missing.push("rower: prędkość");
+        if(bad){ if(!firstError) firstError=bike_speed; missing.push("rower: prędkość"); }
         else {
           bikeSec = (bK/spd)*3600.0;
           bike_time.value = fmt(bikeSec);
         }
       } else if(bikeMode==="time"){
         bikeSec = parseTimeToSeconds(bike_time_manual.value);
-        markNeed(bike_time_manual, bikeSec==null);
-        markNeed(bike_speed, false);
-        // FTP fields not required in this mode
+        const bad = (bikeSec==null);
+        markNeed(bike_time_manual,bad); showHint(H.bike_time_manual, bad);
+        markNeed(bike_speed,false); showHint(H.bike_speed,false);
+        // FTP fields not required here
         [ftp, IF, mass, bike_mass, grade, cda, crr, rho, wind, drivetrain].forEach(x=>markNeed(x,false));
 
-        if(bikeSec==null) missing.push("rower: czas");
+        if(bad){ if(!firstError) firstError=bike_time_manual; missing.push("rower: czas"); }
         else {
           const spd = (bK/(bikeSec/3600.0));
           bike_speed_calc.value = (Math.round(spd*10)/10).toString();
@@ -527,27 +637,32 @@ document.addEventListener("DOMContentLoaded", () => {
         const windV = parseNumber(wind.value);
         const etaV = parsePositive(drivetrain.value);
 
-        // highlight missing FTP fields (independent of total)
-        markNeed(ftp, ftpV==null);
-        markNeed(IF,  ifV==null);
-        markNeed(mass, mV==null);
-        markNeed(bike_mass, bmV==null);
-        markNeed(grade, gradeV==null);
-        markNeed(cda, cdaV==null);
-        markNeed(crr, crrV==null);
-        markNeed(rho, rhoV==null);
-        markNeed(wind, windV==null);
-        markNeed(drivetrain, etaV==null);
+        const checks = [
+          [ftp, ftpV==null, H.ftp, "FTP"],
+          [IF,  ifV==null,  H.if,  "IF"],
+          [mass, mV==null,  H.mass,"masa"],
+          [bike_mass, bmV==null, H.bike_mass, "masa roweru"],
+          [grade, gradeV==null, H.grade,"nachylenie"],
+          [cda, cdaV==null, H.cda,"CdA"],
+          [crr, crrV==null, H.crr,"Crr"],
+          [rho, rhoV==null, H.rho,"ρ"],
+          [wind, windV==null, H.wind,"wiatr"],
+          [drivetrain, etaV==null, H.drivetrain,"sprawność napędu"]
+        ];
+        checks.forEach(([field,bad,hint,label])=>{
+          markNeed(field,bad);
+          showHint(hint,bad);
+          if(bad){
+            if(!firstError) firstError=field;
+            missing.push(label);
+          }
+        });
 
         // not required in this mode
-        markNeed(bike_speed, false);
-        if(bike_time_manual) markNeed(bike_time_manual, false);
+        markNeed(bike_speed,false); showHint(H.bike_speed,false);
+        if(bike_time_manual){ markNeed(bike_time_manual,false); showHint(H.bike_time_manual,false); }
 
-        const bikeReady =
-          ftpV!=null && ifV!=null && mV!=null && bmV!=null &&
-          gradeV!=null && cdaV!=null && crrV!=null && rhoV!=null &&
-          windV!=null && etaV!=null;
-
+        const bikeReady = checks.every(x => x[1] === false);
         if(bikeReady){
           const P = ftpV*ifV;
           const v_ms = estimateSpeedFromPower(P, {
@@ -562,17 +677,6 @@ document.addEventListener("DOMContentLoaded", () => {
           const spd_kmh = v_ms*3.6;
           bikeSec = (bK/spd_kmh)*3600.0;
           bike_time.value = fmt(bikeSec);
-        } else {
-          if(ftpV==null) missing.push("FTP");
-          if(ifV==null) missing.push("IF");
-          if(mV==null) missing.push("masa");
-          if(bmV==null) missing.push("masa roweru");
-          if(gradeV==null) missing.push("nachylenie");
-          if(cdaV==null) missing.push("CdA");
-          if(crrV==null) missing.push("Crr");
-          if(rhoV==null) missing.push("ρ");
-          if(windV==null) missing.push("wiatr");
-          if(etaV==null) missing.push("sprawność napędu");
         }
       }
     }
@@ -581,14 +685,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if(rK!=null){
       if(runMode==="time"){
         runSec = parseTimeToSeconds(run_time.value);
-        markNeed(run_time, runSec==null);
-        markNeed(run_pace, false);
-        if(runSec==null) missing.push("bieg: czas");
+        const bad = (runSec==null);
+        markNeed(run_time,bad); showHint(H.run_time,bad);
+        markNeed(run_pace,false); showHint(H.run_pace,false);
+        if(bad){ if(!firstError) firstError=run_time; missing.push("bieg: czas"); }
       } else {
         const pace = parseTimeToSeconds(run_pace.value);
-        markNeed(run_pace, pace==null);
-        markNeed(run_time, false);
-        if(pace==null) missing.push("bieg: tempo");
+        const bad = (pace==null);
+        markNeed(run_pace,bad); showHint(H.run_pace,bad);
+        markNeed(run_time,false); showHint(H.run_time,false);
+        if(bad){ if(!firstError) firstError=run_pace; missing.push("bieg: tempo"); }
         else runSec = rK*pace;
       }
     }
@@ -600,19 +706,27 @@ document.addEventListener("DOMContentLoaded", () => {
     // transitions for TOTAL
     const t1s = parseTimeToSeconds(t1.value);
     const t2s = parseTimeToSeconds(t2.value);
-    markNeed(t1, t1s==null);
-    markNeed(t2, t2s==null);
-    if(t1s==null) missing.push("T1");
-    if(t2s==null) missing.push("T2");
 
-    // TOTAL only if all 5 pieces exist
+    if(t1s==null){
+      markNeed(t1,true); showHint(H.t1,true);
+      if(!firstError) firstError=t1;
+      missing.push("T1");
+    } else { markNeed(t1,false); showHint(H.t1,false); }
+
+    if(t2s==null){
+      markNeed(t2,true); showHint(H.t2,true);
+      if(!firstError) firstError=t2;
+      missing.push("T2");
+    } else { markNeed(t2,false); showHint(H.t2,false); }
+
+    // TOTAL only if all pieces exist
     if(swimSec!=null && bikeSec!=null && runSec!=null && t1s!=null && t2s!=null){
       const totalSec = swimSec+bikeSec+runSec+t1s+t2s;
       out_total.textContent = fmt(totalSec);
       status.textContent = "OK — policzone.";
       status.className = "ok";
 
-      // What-if (simple)
+      // What-if
       const dSw = parseNumber(d_swim.value) ?? 0;
       const dBk = parseNumber(d_bike.value) ?? 0;
       const dRn = parseNumber(d_run.value) ?? 0;
@@ -652,10 +766,13 @@ document.addEventListener("DOMContentLoaded", () => {
       what_delta.textContent = (delta>=0?"+":"-")+fmt(Math.abs(delta));
     } else {
       out_total.textContent = "--:--:--";
-      status.textContent = "Brakuje: " + (missing.length?missing.join(", "):"uzupełnij dane");
+      status.textContent = "Brakuje / błąd: " + (missing.length?missing.join(", "):"uzupełnij dane");
       status.className = "error";
       what_total.textContent = "--:--:--";
       what_delta.textContent = "--";
+
+      // auto-scroll to first error
+      scrollToFirstError(firstError || total_card);
     }
   }
 
